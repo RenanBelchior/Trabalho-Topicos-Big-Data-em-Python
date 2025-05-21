@@ -125,7 +125,8 @@ if arquivo is not None:
                     st.markdown(f"**Teste {len(st.session_state.historico)-i}:** Modelo: `{item['modelo']}` | Acurácia: `{item['acuracia'] * 100:.2f}%` | Entradas: `{', '.join(item['colunas'])}` | Saída: `{item['target']}`")
                 with col2:
                     if item['tipo'] == 'arvore':
-                        if st.button(f"Visualizar Árvore {len(st.session_state.historico)-i}", key=f"arvore_{i}"):
+                        botao_key = f"arvore_{len(st.session_state.historico)-i}"
+                         if st.button(f"Visualizar Árvore {len(st.session_state.historico)-i}", key=botao_key):
                             fig, ax = plt.subplots(figsize=(10, 6))
                             plot_tree(item['modelo_obj'], feature_names=item['colunas'], class_names=[str(cls) for cls in set(y)], filled=True, ax=ax)
                             st.pyplot(fig)
