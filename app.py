@@ -12,7 +12,7 @@ from sklearn.metrics import accuracy_score
 st.set_page_config(page_title="Previsão de Demanda - Autopeças", layout="wide")
 
 # Título principal do aplicativo
-st.title("📦 Sistema de Previsão de Demanda de Autopeças")
+st.title("📦 AutoParts Predict IA")
 
 # Upload do arquivo CSV
 arquivo = st.file_uploader("Faça upload do arquivo CSV", type=["csv"])
