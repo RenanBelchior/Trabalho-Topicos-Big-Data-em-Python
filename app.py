@@ -8,78 +8,84 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score
 
+# Configuração da página
 st.set_page_config(page_title="Previsão de Demanda - Autopeças", layout="wide")
-st.title("📦 Sistema de Previsão de Demanda de Autopeças")
 
-# Armazenar resultados para exibir depois
-if 'acc_dt' not in st.session_state:
-    st.session_state.acc_dt = None
-if 'acc_svm' not in st.session_state:
-    st.session_state.acc_svm = None
+# Título principal do aplicativo
+st.title("📦 Sistema de Previsão de Demanda de Autopeças")
 
 # Upload do arquivo CSV
 arquivo = st.file_uploader("Faça upload do arquivo CSV", type=["csv"])
 
+# Se um arquivo for enviado
 if arquivo is not None:
+    # Leitura do CSV
     df = pd.read_csv(arquivo, encoding='utf-8-sig')
+
+    # Mostra os primeiros registros dos dados
     st.subheader("Pré-visualização dos Dados")
     st.dataframe(df.head())
 
+    # Lista de colunas disponíveis
     colunas_disponiveis = df.columns.tolist()
 
+    # Seleção de colunas auxiliares (entradas) e coluna de saída (target)
     col_auxiliares = st.multiselect("Escolha as colunas auxiliares (entradas):", colunas_disponiveis, default=colunas_disponiveis[:2])
     col_saida = st.selectbox("Escolha a coluna de saída (target):", colunas_disponiveis, index=len(colunas_disponiveis) - 1)
 
+    # Se colunas foram selecionadas
     if col_auxiliares and col_saida:
+        # Codificação de variáveis categóricas com LabelEncoder
         le = LabelEncoder()
         for col in df.select_dtypes(include='object').columns:
             df[col] = le.fit_transform(df[col])
 
+        # Separação em variáveis explicativas (X) e alvo (y)
         X = df[col_auxiliares]
         y = df[col_saida]
 
+        # Divisão em treino e teste
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
+        # Título da seção de classificadores
         st.subheader("Classificadores")
 
+        # Escolha do classificador
         aba = st.radio("Escolha um classificador:", ["Árvore de Decisão", "SVM"])
 
+        # Classificador Árvore de Decisão
         if aba == "Árvore de Decisão":
             if st.button("Testar Classificador Árvore de Decisão"):
                 modelo_dt = DecisionTreeClassifier(random_state=42)
                 modelo_dt.fit(X_train, y_train)
                 y_pred_dt = modelo_dt.predict(X_test)
                 acc_dt = accuracy_score(y_test, y_pred_dt)
-                st.session_state.acc_dt = acc_dt
                 st.success(f"Acurácia da Árvore de Decisão: {acc_dt * 100:.2f}%")
 
+        # Classificador SVM
         elif aba == "SVM":
             op_svm = st.radio("Tipo de SVM", ["SVM Básico", "SVM com Pipeline"])
 
-            if st.button("Testar Classificador SVM"):
-                if op_svm == "SVM Básico":
+            # Armazenar acurácias separadamente
+            if op_svm == "SVM Básico":
+                if st.button("Testar SVM Básico"):
                     modelo_svm = SVC(kernel='linear')
                     modelo_svm.fit(X_train, y_train)
                     y_pred_svm = modelo_svm.predict(X_test)
-                else:
+                    acc_svm_basico = accuracy_score(y_test, y_pred_svm)
+                    st.success(f"Acurácia do SVM Básico: {acc_svm_basico * 100:.2f}%")
+
+            else:
+                if st.button("Testar SVM com Pipeline"):
                     pipeline_svm = Pipeline([
                         ('scaler', StandardScaler()),
                         ('svc', SVC(kernel='linear'))
                     ])
                     pipeline_svm.fit(X_train, y_train)
-                    y_pred_svm = pipeline_svm.predict(X_test)
-
-                acc_svm = accuracy_score(y_test, y_pred_svm)
-                st.session_state.acc_svm = acc_svm
-                st.success(f"Acurácia do SVM ({op_svm}): {acc_svm * 100:.2f}%")
-
-        # Exibição apenas das acurácias se ambos foram testados
-        if st.session_state.acc_dt is not None or st.session_state.acc_svm is not None:
-            st.subheader("📊 Comparativo de Desempenho dos Classificadores")
-            if st.session_state.acc_dt is not None:
-                st.write(f"🌳 Árvore de Decisão: **{st.session_state.acc_dt * 100:.2f}%**")
-            if st.session_state.acc_svm is not None:
-                st.write(f"🧠 SVM: **{st.session_state.acc_svm * 100:.2f}%**")
+                    y_pred_svm_pipeline = pipeline_svm.predict(X_test)
+                    acc_svm_pipeline = accuracy_score(y_test, y_pred_svm_pipeline)
+                    st.success(f"Acurácia do SVM com Pipeline: {acc_svm_pipeline * 100:.2f}%")
 
 else:
+    # Mensagem caso nenhum arquivo tenha sido enviado
     st.info("👈 Faça upload do arquivo CSV para começar.")
