@@ -117,7 +117,7 @@ if arquivo is not None:
         if st.session_state.historico:
             st.subheader("📊 Histórico de Testes")
             for i, item in enumerate(st.session_state.historico[::-1]):
-                st.markdown(f"**Teste {len(st.session_state.historico)-i}:** Modelo: `{item['modelo']}` | Acurácia: `{item['acuracia'] * 100:.2f}%` | Entradas: `{', '.join(item['colunas'])}` | Saída: `{item['target']}`)
+                st.markdown(f"**Teste {len(st.session_state.historico)-i}:** Modelo: `{item['modelo']}` | Acurácia: `{item['acuracia'] * 100:.2f}%` | Entradas: `{', '.join(item['colunas'])}` | Saída: `{item['target']}`")
 else:
     # Mensagem caso nenhum arquivo tenha sido enviado
     st.info("👈 Faça upload do arquivo CSV para começar.")
