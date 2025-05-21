@@ -17,6 +17,10 @@ st.title("📦 Sistema de Previsão de Demanda de Autopeças")
 # Upload do arquivo CSV
 arquivo = st.file_uploader("Faça upload do arquivo CSV", type=["csv"])
 
+# Histórico de testes
+if 'historico' not in st.session_state:
+    st.session_state.historico = []
+
 # Se um arquivo for enviado
 if arquivo is not None:
     # Leitura do CSV
@@ -62,11 +66,17 @@ if arquivo is not None:
                 acc_dt = accuracy_score(y_test, y_pred_dt)
                 st.success(f"Acurácia da Árvore de Decisão: {acc_dt * 100:.2f}%")
 
+                st.session_state.historico.append({
+                    'modelo': 'Árvore de Decisão',
+                    'acuracia': acc_dt,
+                    'colunas': col_auxiliares,
+                    'target': col_saida
+                })
+
         # Classificador SVM
         elif aba == "SVM":
             op_svm = st.radio("Tipo de SVM", ["SVM Básico", "SVM com Pipeline"])
 
-            # Armazenar acurácias separadamente
             if op_svm == "SVM Básico":
                 if st.button("Testar SVM Básico"):
                     modelo_svm = SVC(kernel='linear')
@@ -74,6 +84,13 @@ if arquivo is not None:
                     y_pred_svm = modelo_svm.predict(X_test)
                     acc_svm_basico = accuracy_score(y_test, y_pred_svm)
                     st.success(f"Acurácia do SVM Básico: {acc_svm_basico * 100:.2f}%")
+
+                    st.session_state.historico.append({
+                        'modelo': 'SVM Básico',
+                        'acuracia': acc_svm_basico,
+                        'colunas': col_auxiliares,
+                        'target': col_saida
+                    })
 
             else:
                 if st.button("Testar SVM com Pipeline"):
@@ -86,6 +103,18 @@ if arquivo is not None:
                     acc_svm_pipeline = accuracy_score(y_test, y_pred_svm_pipeline)
                     st.success(f"Acurácia do SVM com Pipeline: {acc_svm_pipeline * 100:.2f}%")
 
+                    st.session_state.historico.append({
+                        'modelo': 'SVM com Pipeline',
+                        'acuracia': acc_svm_pipeline,
+                        'colunas': col_auxiliares,
+                        'target': col_saida
+                    })
+
+        # Exibição do histórico
+        if st.session_state.historico:
+            st.subheader("📊 Histórico de Testes")
+            for i, item in enumerate(st.session_state.historico[::-1]):
+                st.markdown(f"**Teste {len(st.session_state.historico)-i}:** Modelo: `{item['modelo']}` | Acurácia: `{item['acuracia'] * 100:.2f}%` | Entradas: `{', '.join(item['colunas'])}` | Saída: `{item['target']}`")
 else:
     # Mensagem caso nenhum arquivo tenha sido enviado
     st.info("👈 Faça upload do arquivo CSV para começar.")
