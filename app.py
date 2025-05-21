@@ -68,6 +68,7 @@ if arquivo is not None:
                 acc_dt = accuracy_score(y_test, y_pred_dt)
                 st.success(f"Acurácia da Árvore de Decisão: {acc_dt * 100:.2f}%")
 
+                # Salva o teste no histórico
                 st.session_state.historico.append({
                     'modelo': 'Árvore de Decisão',
                     'acuracia': acc_dt,
@@ -122,11 +123,11 @@ if arquivo is not None:
             for i, item in enumerate(st.session_state.historico[::-1]):
                 col1, col2 = st.columns([3, 1])
                 with col1:
-                    st.markdown(f"**Teste {len(st.session_state.historico)-i}:** Modelo: `{item['modelo']}` | Acurácia: `{item['acuracia'] * 100:.2f}%` | Entradas: `{', '.join(item['colunas'])}` | Saída: `{item['target']}`")
+                    st.markdown(f"**Teste {len(st.session_state.historico)-i}:** Modelo: `{item['modelo']}` | Acurácia: `{item['acuracia'] * 100:.2f}%` | Entradas: `{', '.join(item['colunas'])}` | Saída: `{item['target']}`)
                 with col2:
                     if item['tipo'] == 'arvore':
                         botao_key = f"arvore_{len(st.session_state.historico)-i}"
-                         if st.button(f"Visualizar Árvore {len(st.session_state.historico)-i}", key=botao_key):
+                        if st.button(f"Visualizar Árvore {len(st.session_state.historico)-i}", key=botao_key):
                             fig, ax = plt.subplots(figsize=(10, 6))
                             plot_tree(item['modelo_obj'], feature_names=item['colunas'], class_names=[str(cls) for cls in set(y)], filled=True, ax=ax)
                             st.pyplot(fig)
