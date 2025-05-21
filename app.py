@@ -1,18 +1,20 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, plot_tree
 from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score
+import io
 
 # Configuração da página
 st.set_page_config(page_title="Previsão de Demanda - Autopeças", layout="wide")
 
 # Título principal do aplicativo
-st.title("📦 AutoParts Predict IA")
+st.title("📦 Sistema de Previsão de Demanda de Autopeças")
 
 # Upload do arquivo CSV
 arquivo = st.file_uploader("Faça upload do arquivo CSV", type=["csv"])
@@ -70,7 +72,9 @@ if arquivo is not None:
                     'modelo': 'Árvore de Decisão',
                     'acuracia': acc_dt,
                     'colunas': col_auxiliares,
-                    'target': col_saida
+                    'target': col_saida,
+                    'modelo_obj': modelo_dt,
+                    'tipo': 'arvore'
                 })
 
         # Classificador SVM
@@ -89,7 +93,8 @@ if arquivo is not None:
                         'modelo': 'SVM Básico',
                         'acuracia': acc_svm_basico,
                         'colunas': col_auxiliares,
-                        'target': col_saida
+                        'target': col_saida,
+                        'tipo': 'svm'
                     })
 
             else:
@@ -107,14 +112,23 @@ if arquivo is not None:
                         'modelo': 'SVM com Pipeline',
                         'acuracia': acc_svm_pipeline,
                         'colunas': col_auxiliares,
-                        'target': col_saida
+                        'target': col_saida,
+                        'tipo': 'svm'
                     })
 
         # Exibição do histórico
         if st.session_state.historico:
             st.subheader("📊 Histórico de Testes")
             for i, item in enumerate(st.session_state.historico[::-1]):
-                st.markdown(f"**Teste {len(st.session_state.historico)-i}:** Modelo: `{item['modelo']}` | Acurácia: `{item['acuracia'] * 100:.2f}%` | Entradas: `{', '.join(item['colunas'])}` | Saída: `{item['target']}`")
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    st.markdown(f"**Teste {len(st.session_state.historico)-i}:** Modelo: `{item['modelo']}` | Acurácia: `{item['acuracia'] * 100:.2f}%` | Entradas: `{', '.join(item['colunas'])}` | Saída: `{item['target']}`)
+                with col2:
+                    if item['tipo'] == 'arvore':
+                        if st.button(f"Visualizar Árvore {len(st.session_state.historico)-i}"):
+                            fig, ax = plt.subplots(figsize=(10, 6))
+                            plot_tree(item['modelo_obj'], feature_names=item['colunas'], class_names=True, filled=True, ax=ax)
+                            st.pyplot(fig)
 else:
     # Mensagem caso nenhum arquivo tenha sido enviado
     st.info("👈 Faça upload do arquivo CSV para começar.")
