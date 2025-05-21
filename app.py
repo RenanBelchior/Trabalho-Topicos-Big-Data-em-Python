@@ -75,7 +75,7 @@ if arquivo is not None:
 
         # Exibição apenas das acurácias se ambos foram testados
         if st.session_state.acc_dt is not None or st.session_state.acc_svm is not None:
-            st.subheader("📊 Comparativo de Acurácia")
+            st.subheader("📊 Comparativo de Desempenho dos Classificadores")
             if st.session_state.acc_dt is not None:
                 st.write(f"🌳 Árvore de Decisão: **{st.session_state.acc_dt * 100:.2f}%**")
             if st.session_state.acc_svm is not None:
