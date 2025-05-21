@@ -6,11 +6,16 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score
 
 st.set_page_config(page_title="Previsão de Demanda - Autopeças", layout="wide")
-
 st.title("📦 Sistema de Previsão de Demanda de Autopeças")
+
+# Armazenar resultados para exibir depois
+if 'acc_dt' not in st.session_state:
+    st.session_state.acc_dt = None
+if 'acc_svm' not in st.session_state:
+    st.session_state.acc_svm = None
 
 # Upload do arquivo CSV
 arquivo = st.file_uploader("Faça upload do arquivo CSV", type=["csv"])
@@ -26,7 +31,6 @@ if arquivo is not None:
     col_saida = st.selectbox("Escolha a coluna de saída (target):", colunas_disponiveis, index=len(colunas_disponiveis) - 1)
 
     if col_auxiliares and col_saida:
-        # LabelEncoder para colunas categóricas
         le = LabelEncoder()
         for col in df.select_dtypes(include='object').columns:
             df[col] = le.fit_transform(df[col])
@@ -46,9 +50,8 @@ if arquivo is not None:
                 modelo_dt.fit(X_train, y_train)
                 y_pred_dt = modelo_dt.predict(X_test)
                 acc_dt = accuracy_score(y_test, y_pred_dt)
+                st.session_state.acc_dt = acc_dt
                 st.success(f"Acurácia da Árvore de Decisão: {acc_dt * 100:.2f}%")
-                st.text("Relatório:")
-                st.text(classification_report(y_test, y_pred_dt))
 
         elif aba == "SVM":
             op_svm = st.radio("Tipo de SVM", ["SVM Básico", "SVM com Pipeline"])
@@ -67,8 +70,16 @@ if arquivo is not None:
                     y_pred_svm = pipeline_svm.predict(X_test)
 
                 acc_svm = accuracy_score(y_test, y_pred_svm)
+                st.session_state.acc_svm = acc_svm
                 st.success(f"Acurácia do SVM ({op_svm}): {acc_svm * 100:.2f}%")
-                st.text("Relatório:")
-                st.text(classification_report(y_test, y_pred_svm))
+
+        # Exibição apenas das acurácias se ambos foram testados
+        if st.session_state.acc_dt is not None or st.session_state.acc_svm is not None:
+            st.subheader("📊 Comparativo de Acurácia")
+            if st.session_state.acc_dt is not None:
+                st.write(f"🌳 Árvore de Decisão: **{st.session_state.acc_dt * 100:.2f}%**")
+            if st.session_state.acc_svm is not None:
+                st.write(f"🧠 SVM: **{st.session_state.acc_svm * 100:.2f}%**")
+
 else:
     st.info("👈 Faça upload do arquivo CSV para começar.")
