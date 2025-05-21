@@ -123,7 +123,7 @@ if arquivo is not None:
             for i, item in enumerate(st.session_state.historico[::-1]):
                 col1, col2 = st.columns([3, 1])
                 with col1:
-                    st.markdown(f"**Teste {len(st.session_state.historico)-i}:** Modelo: `{item['modelo']}` | Acurácia: `{item['acuracia'] * 100:.2f}%` | Entradas: `{', '.join(item['colunas'])}` | Saída: `{item['target']}`)
+                    st.markdown(f"**Teste {len(st.session_state.historico)-i}:** Modelo: `{item['modelo']}` | Acurácia: `{item['acuracia'] * 100:.2f}%` | Entradas: `{', '.join(item['colunas'])}` | Saída: `{item['target']}`")
                 with col2:
                     if item['tipo'] == 'arvore':
                         botao_key = f"arvore_{len(st.session_state.historico)-i}"
