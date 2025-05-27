@@ -17,7 +17,6 @@ df = pd.read_csv(url_dados, encoding='utf-8-sig')
 
 # Exibição das colunas utilizadas
 col_auxiliares = ['Preco', 'Quantidade']
-print(col_auxiliares("Preço e Quantidade"))
 col_saida = 'Demanda'
 st.info(f"**Colunas de entrada:** {col_auxiliares} | **Coluna de saída:** {col_saida}")
 
