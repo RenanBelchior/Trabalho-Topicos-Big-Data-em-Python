@@ -35,7 +35,7 @@ if arquivo is not None:
     else:
         # Mostrar as colunas fixas
         st.info(f"**Colunas de Entrada:** {', '.join(col_entradas)}")
-        st.info(f"**Coluna de Saída: ** {col_saida}")
+        st.info(f"**Coluna de Saída:** {col_saida}")
 
         # Codificação se necessário
         le = LabelEncoder()
