@@ -9,7 +9,7 @@ from sklearn.metrics import accuracy_score
 
 # Configuração da página
 st.set_page_config(page_title="Previsão de Demanda - Autopeças", layout="wide")
-st.title("📦 Sistema de Previsão de Demanda de Autopeças")
+st.title("📦 Previsão Inteligente Autopeças")
 
 # Leitura direta do arquivo do GitHub
 url_dados = "https://raw.githubusercontent.com/RenanBelchior/Trabalho-Topicos-Big-Data-em-Python/main/historico_vendas.csv"
