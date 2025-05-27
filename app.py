@@ -14,7 +14,7 @@ st.title("📦 Sistema de Previsão de Demanda de Autopeças")
 # Upload do arquivo CSV
 arquivo = st.file_uploader("Faça upload do arquivo CSV com colunas: Preco, Quantidade, Demanda", type=["csv"])
 
-# Inicialização do histórico
+# Inicialização do histórico e melhor teste
 if 'historico' not in st.session_state:
     st.session_state.historico = []
 
@@ -25,13 +25,18 @@ if 'melhor_teste' not in st.session_state:
 if arquivo is not None:
     df = pd.read_csv(arquivo, encoding='utf-8-sig')
 
-    # Verificação das colunas obrigatórias
+    # Definição das colunas fixas
     col_entradas = ['Preco', 'Quantidade']
     col_saida = 'Demanda'
 
+    # Verificação das colunas obrigatórias
     if not all(col in df.columns for col in col_entradas + [col_saida]):
         st.error("O arquivo precisa conter as colunas: Preco, Quantidade e Demanda")
     else:
+        # Mostrar as colunas fixas
+        st.info(f"**Colunas de Entrada:** {', '.join(col_entradas)}")
+        st.info(f"**Coluna de Saída (Target):** {col_saida}")
+
         # Codificação se necessário
         le = LabelEncoder()
         for col in df.select_dtypes(include='object').columns:
