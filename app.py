@@ -28,10 +28,6 @@ if arquivo is not None:
     # Leitura do CSV
     df = pd.read_csv(arquivo, encoding='utf-8-sig')
 
-    # Mostra os primeiros registros dos dados
-    st.subheader("Pré-visualização dos Dados")
-    st.dataframe(df.head())
-
     # Lista de colunas disponíveis
     colunas_disponiveis = df.columns.tolist()
 
