@@ -11,124 +11,106 @@ from sklearn.metrics import accuracy_score
 st.set_page_config(page_title="Previsão de Demanda - Autopeças", layout="wide")
 st.title("📦 Sistema de Previsão de Demanda de Autopeças")
 
-# Upload do arquivo CSV
-arquivo = st.file_uploader("Faça upload do arquivo CSV com colunas: Preco, Quantidade, Demanda", type=["csv"])
+# Leitura direta do arquivo do GitHub
+url_dados = "https://raw.githubusercontent.com/RenanBelchior/Trabalho-Topicos-Big-Data-em-Python/main/historico_vendas.csv"
+df = pd.read_csv(url_dados, encoding='utf-8-sig')
 
-# Inicialização do histórico e melhor teste
+# Exibição das colunas utilizadas
+col_auxiliares = ['Preco', 'Quantidade']
+col_saida = 'Demanda'
+st.info(f"**Colunas de entrada:** {col_auxiliares} | **Coluna de saída:** {col_saida}")
+
+# Inicializa histórico e melhor resultado
 if 'historico' not in st.session_state:
     st.session_state.historico = []
+if 'melhor' not in st.session_state:
+    st.session_state.melhor = {'modelo': None, 'acuracia': 0}
 
-if 'melhor_teste' not in st.session_state:
-    st.session_state.melhor_teste = {'modelo': None, 'acuracia': 0.0}
+# Codificação de variáveis categóricas
+le = LabelEncoder()
+for col in df.select_dtypes(include='object').columns:
+    df[col] = le.fit_transform(df[col])
 
-# Se um arquivo for enviado
-if arquivo is not None:
-    df = pd.read_csv(arquivo, encoding='utf-8-sig')
+# Separação em X e y
+X = df[col_auxiliares]
+y = df[col_saida]
 
-    # Definição das colunas fixas
-    col_entradas = ['Preco', 'Quantidade']
-    col_saida = 'Demanda'
+# Divisão em treino e teste
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-    # Verificação das colunas obrigatórias
-    if not all(col in df.columns for col in col_entradas + [col_saida]):
-        st.error("O arquivo precisa conter as colunas: Preco, Quantidade e Demanda")
-    else:
-        # Mostrar as colunas fixas
-        st.info(f"**Colunas de Entrada:** {', '.join(col_entradas)}")
-        st.info(f"**Coluna de Saída:** {col_saida}")
+# Escolha do classificador
+st.subheader("Classificadores")
+aba = st.radio("Escolha um classificador:", ["Árvore de Decisão", "SVM"])
 
-        # Codificação se necessário
-        le = LabelEncoder()
-        for col in df.select_dtypes(include='object').columns:
-            df[col] = le.fit_transform(df[col])
+if aba == "Árvore de Decisão":
+    if st.button("Testar Classificador Árvore de Decisão"):
+        modelo_dt = DecisionTreeClassifier(random_state=42)
+        modelo_dt.fit(X_train, y_train)
+        y_pred_dt = modelo_dt.predict(X_test)
+        acc_dt = accuracy_score(y_test, y_pred_dt)
+        st.success(f"Acurácia da Árvore de Decisão: {acc_dt * 100:.2f}%")
 
-        # Separação das variáveis
-        X = df[col_entradas]
-        y = df[col_saida]
+        st.session_state.historico.append({
+            'modelo': 'Árvore de Decisão',
+            'acuracia': acc_dt
+        })
 
-        # Treino/teste
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+        if acc_dt > st.session_state.melhor['acuracia']:
+            st.session_state.melhor = {
+                'modelo': 'Árvore de Decisão',
+                'acuracia': acc_dt
+            }
 
-        st.subheader("Classificadores")
-        aba = st.radio("Escolha um classificador:", ["Árvore de Decisão", "SVM"])
+elif aba == "SVM":
+    tipo_svm = st.radio("Tipo de SVM", ["SVM Básico", "SVM com Pipeline"])
 
-        if aba == "Árvore de Decisão":
-            if st.button("Testar Classificador Árvore de Decisão"):
-                modelo_dt = DecisionTreeClassifier(random_state=42)
-                modelo_dt.fit(X_train, y_train)
-                y_pred_dt = modelo_dt.predict(X_test)
-                acc_dt = accuracy_score(y_test, y_pred_dt)
+    if tipo_svm == "SVM Básico":
+        if st.button("Testar SVM Básico"):
+            modelo_svm = SVC(kernel='linear')
+            modelo_svm.fit(X_train, y_train)
+            y_pred_svm = modelo_svm.predict(X_test)
+            acc_svm = accuracy_score(y_test, y_pred_svm)
+            st.success(f"Acurácia do SVM Básico: {acc_svm * 100:.2f}%")
 
-                st.success(f"Acurácia da Árvore de Decisão: {acc_dt * 100:.2f}%")
+            st.session_state.historico.append({
+                'modelo': 'SVM Básico',
+                'acuracia': acc_svm
+            })
 
-                # Atualiza melhor desempenho
-                if acc_dt > st.session_state.melhor_teste['acuracia']:
-                    st.session_state.melhor_teste = {
-                        'modelo': 'Árvore de Decisão',
-                        'acuracia': acc_dt
-                    }
+            if acc_svm > st.session_state.melhor['acuracia']:
+                st.session_state.melhor = {
+                    'modelo': 'SVM Básico',
+                    'acuracia': acc_svm
+                }
 
-                st.session_state.historico.append({
-                    'modelo': 'Árvore de Decisão',
-                    'acuracia': acc_dt
-                })
+    elif tipo_svm == "SVM com Pipeline":
+        if st.button("Testar SVM com Pipeline"):
+            pipeline = Pipeline([
+                ('scaler', StandardScaler()),
+                ('svc', SVC(kernel='linear'))
+            ])
+            pipeline.fit(X_train, y_train)
+            y_pred_pipeline = pipeline.predict(X_test)
+            acc_pipeline = accuracy_score(y_test, y_pred_pipeline)
+            st.success(f"Acurácia do SVM com Pipeline: {acc_pipeline * 100:.2f}%")
 
-        elif aba == "SVM":
-            tipo_svm = st.radio("Tipo de SVM", ["SVM Básico", "SVM com Pipeline"])
+            st.session_state.historico.append({
+                'modelo': 'SVM com Pipeline',
+                'acuracia': acc_pipeline
+            })
 
-            if tipo_svm == "SVM Básico":
-                if st.button("Testar SVM Básico"):
-                    modelo_svm = SVC(kernel='linear')
-                    modelo_svm.fit(X_train, y_train)
-                    y_pred_svm = modelo_svm.predict(X_test)
-                    acc_svm = accuracy_score(y_test, y_pred_svm)
+            if acc_pipeline > st.session_state.melhor['acuracia']:
+                st.session_state.melhor = {
+                    'modelo': 'SVM com Pipeline',
+                    'acuracia': acc_pipeline
+                }
 
-                    st.success(f"Acurácia do SVM Básico: {acc_svm * 100:.2f}%")
+# Histórico e melhor desempenho
+if st.session_state.historico:
+    st.subheader("📊 Histórico de Testes")
+    for i, item in enumerate(st.session_state.historico[::-1]):
+        st.markdown(f"**Teste {len(st.session_state.historico)-i}:** Modelo: `{item['modelo']}` | Acurácia: `{item['acuracia'] * 100:.2f}%`")
 
-                    if acc_svm > st.session_state.melhor_teste['acuracia']:
-                        st.session_state.melhor_teste = {
-                            'modelo': 'SVM Básico',
-                            'acuracia': acc_svm
-                        }
-
-                    st.session_state.historico.append({
-                        'modelo': 'SVM Básico',
-                        'acuracia': acc_svm
-                    })
-
-            else:
-                if st.button("Testar SVM com Pipeline"):
-                    pipeline = Pipeline([
-                        ('scaler', StandardScaler()),
-                        ('svc', SVC(kernel='linear'))
-                    ])
-                    pipeline.fit(X_train, y_train)
-                    y_pred = pipeline.predict(X_test)
-                    acc_pipeline = accuracy_score(y_test, y_pred)
-
-                    st.success(f"Acurácia do SVM com Pipeline: {acc_pipeline * 100:.2f}%")
-
-                    if acc_pipeline > st.session_state.melhor_teste['acuracia']:
-                        st.session_state.melhor_teste = {
-                            'modelo': 'SVM com Pipeline',
-                            'acuracia': acc_pipeline
-                        }
-
-                    st.session_state.historico.append({
-                        'modelo': 'SVM com Pipeline',
-                        'acuracia': acc_pipeline
-                    })
-
-        # Exibição do melhor teste
-        if st.session_state.melhor_teste['modelo']:
-            st.subheader("🏆 Melhor Resultado Até Agora")
-            st.markdown(f"**Modelo:** {st.session_state.melhor_teste['modelo']}")
-            st.markdown(f"**Acurácia:** {st.session_state.melhor_teste['acuracia'] * 100:.2f}%")
-
-        # Exibição do histórico
-        if st.session_state.historico:
-            st.subheader("📊 Histórico de Testes")
-            for i, item in enumerate(st.session_state.historico[::-1]):
-                st.markdown(f"**Teste {len(st.session_state.historico) - i}:** Modelo: `{item['modelo']}` | Acurácia: `{item['acuracia'] * 100:.2f}%`")
-else:
-    st.info("👈 Faça upload do arquivo CSV para começar.")
+if st.session_state.melhor['modelo']:
+    st.subheader("⭐ Melhor Desempenho Atual")
+    st.markdown(f"**Modelo:** `{st.session_state.melhor['modelo']}` | **Acurácia:** `{st.session_state.melhor['acuracia'] * 100:.2f}%`")
