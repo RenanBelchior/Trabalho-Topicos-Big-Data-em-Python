@@ -36,8 +36,8 @@ if arquivo is not None:
     colunas_disponiveis = df.columns.tolist()
 
     # Seleção de colunas auxiliares (entradas) e coluna de saída (target)
-    col_auxiliares = st.multiselect("Escolha as colunas auxiliares (entradas):", colunas_disponiveis, default=colunas_disponiveis[:2])
-    col_saida = st.selectbox("Escolha a coluna de saída (target):", colunas_disponiveis, index=len(colunas_disponiveis) - 1)
+    col_auxiliares = st.multiselect("Escolha as colunas de entradas:", colunas_disponiveis, default=colunas_disponiveis[:2])
+    col_saida = st.selectbox("Escolha a coluna de saída (alvo):", colunas_disponiveis, index=len(colunas_disponiveis) - 1)
 
     # Se colunas foram selecionadas
     if col_auxiliares and col_saida:
