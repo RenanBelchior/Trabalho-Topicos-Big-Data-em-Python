@@ -118,6 +118,15 @@ if arquivo is not None:
             st.subheader("📊 Histórico de Testes")
             for i, item in enumerate(st.session_state.historico[::-1]):
                 st.markdown(f"**Teste {len(st.session_state.historico)-i}:** Modelo: `{item['modelo']}` | Acurácia: `{item['acuracia'] * 100:.2f}%` | Entradas: `{', '.join(item['colunas'])}` | Saída: `{item['target']}`")
+
+            # Exibição do melhor desempenho
+            melhor_teste = max(st.session_state.historico, key=lambda x: x['acuracia'])
+            st.subheader("🏆 Melhor Desempenho Registrado")
+            st.success(f"Modelo: **{melhor_teste['modelo']}**\n\n"
+                       f"Acurácia: **{melhor_teste['acuracia'] * 100:.2f}%**\n\n"
+                       f"Entradas: `{', '.join(melhor_teste['colunas'])}`\n"
+                       f"Saída: `{melhor_teste['target']}`")
+
 else:
     # Mensagem caso nenhum arquivo tenha sido enviado
     st.info("👈 Faça upload do arquivo CSV para começar.")
