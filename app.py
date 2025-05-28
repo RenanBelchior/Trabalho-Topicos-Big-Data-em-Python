@@ -11,12 +11,6 @@ import matplotlib.pyplot as plt
 # Configuração da página
 st.set_page_config(page_title="Classificador Inteligente Autopeças", layout="wide")
 st.title("🚗 Classificador Inteligente Autopeças")
-st.markdown(
-    """
-    Sistema para previsão de demanda de autopeças utilizando modelos de Machine Learning.
-    Escolha um modelo no menu lateral para começar.
-    """
-)
 
 # Leitura dos dados
 dados_url = "https://raw.githubusercontent.com/RenanBelchior/Trabalho-Topicos-Big-Data-em-Python/main/historico_vendas.csv"
