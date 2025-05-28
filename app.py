@@ -11,10 +11,10 @@ import matplotlib.pyplot as plt
 st.set_page_config(page_title="Classificador Inteligente Autopeças", layout="wide")
 st.title("Classificador Inteligente Autopeças")
 
-# Menu lateral
+# Menu lateral do projeto
 menu = st.sidebar.radio("Menu Principal", ["Árvore de Decisão", "SVM", "Comparativo", "Limpar Histórico"])
 
-# Dados e pré-processamento (carrega e prepara só uma vez)
+# Carrega os dados e faz o pré-processamento(sem necessitar de upload)
 @st.cache_data
 def load_data():
     df = pd.read_csv("https://raw.githubusercontent.com/RenanBelchior/Trabalho-Topicos-Big-Data-em-Python/main/historico_vendas.csv", encoding='utf-8-sig')
@@ -63,7 +63,7 @@ def exibir_historico(lista):
 
 if menu == "Árvore de Decisão":
     st.header("🌳 Árvore de Decisão - Menu")
-    if st.button("Treinar Modelo"): treinar_dt()
+    if st.button("Treinar Modelo Árvore de Decisão"): treinar_dt()
     st.subheader("Histórico de Acurácia")
     exibir_historico(st.session_state.historico_dt)
     if st.button("Mostrar Árvore de Decisão"):
