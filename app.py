@@ -83,7 +83,7 @@ if menu == "Árvore de Decisão":
             st.warning("Treine o modelo antes de visualizar a árvore.")
 
 elif menu == "SVM":
-    st.header("🔎 SVM (Máquina de Vetores de Suporte)")
+    st.header("🔎 SVM")
     if st.button("Treinar Modelo"):
         pipeline = Pipeline([
             ('scaler', StandardScaler()),
