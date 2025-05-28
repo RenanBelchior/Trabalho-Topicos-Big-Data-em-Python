@@ -41,21 +41,23 @@ if 'modelo_dt' not in st.session_state:
 if 'modelo_svm' not in st.session_state:
     st.session_state.modelo_svm = None
 
-# Menu principal
-st.subheader("Menu Principal")
-col1, col2, col3, col4 = st.columns(4)
+# Menu principal (só mostra se nenhum submenu estiver ativo)
+if st.session_state.get("menu") is None:
+    st.subheader("Menu Principal")
+    col1, col2, col3, col4 = st.columns(4)
 
-if col1.button("Árvore de Decisão"):
-    st.session_state.menu = "arvore"
-elif col2.button("SVM"):
-    st.session_state.menu = "svm"
-elif col3.button("Exibir Desempenho dos Classificadores"):
-    st.session_state.menu = "comparativo"
-elif col4.button("Limpar Histórico Geral"):
-    st.session_state.historico_dt.clear()
-    st.session_state.historico_svm.clear()
-    st.session_state.melhor = {'modelo': None, 'acuracia': 0}
-    st.success("Histórico geral limpo com sucesso!")
+    if col1.button("Árvore de Decisão"):
+        st.session_state.menu = "arvore"
+    elif col2.button("SVM"):
+        st.session_state.menu = "svm"
+    elif col3.button("Exibir Desempenho dos Classificadores"):
+        st.session_state.menu = "comparativo"
+    elif col4.button("Limpar Histórico Geral"):
+        st.session_state.historico_dt.clear()
+        st.session_state.historico_svm.clear()
+        st.session_state.melhor = {'modelo': None, 'acuracia': 0}
+        st.success("Histórico geral limpo com sucesso!")
+
 
 # Submenu Árvore de Decisão
 if st.session_state.get("menu") == "arvore":
