@@ -16,10 +16,15 @@ st.title("📦 Sistema de Previsão de Demanda de Autopeças")
 url_dados = "https://raw.githubusercontent.com/RenanBelchior/Trabalho-Topicos-Big-Data-em-Python/main/historico_vendas.csv"
 df = pd.read_csv(url_dados, encoding='utf-8-sig')
 
+# Ajustes na coluna de saída
+df['Demanda'] = df['Demanda'].astype(int)
+
 # Exibição das colunas utilizadas
 col_auxiliares = ['Preco', 'Quantidade']
 col_saida = 'Demanda'
 st.info(f"**Colunas de entrada:** {col_auxiliares} | **Coluna de saída:** {col_saida}")
+st.sidebar.markdown("**Valores únicos de 'Demanda':**")
+st.sidebar.write(df['Demanda'].unique())
 
 # Codificação de variáveis categóricas
 le = LabelEncoder()
@@ -75,8 +80,11 @@ if menu == "Árvore de Decisão":
         preco = st.number_input("Informe o Preço", min_value=0.0, key="dt_preco")
         quantidade = st.number_input("Informe a Quantidade", min_value=0, key="dt_qtd")
         if st.button("Classificar com Árvore de Decisão"):
-            pred = st.session_state.modelo_dt.predict([[preco, quantidade]])
-            st.success(f"Demanda Prevista: {pred[0]}")
+            if preco > 0 or quantidade > 0:
+                pred = st.session_state.modelo_dt.predict([[preco, quantidade]])
+                st.success(f"Demanda Prevista: {pred[0]}")
+            else:
+                st.warning("Por favor, insira valores maiores que zero para Preço ou Quantidade.")
     else:
         st.info("Classificador ainda não treinado.")
 
@@ -103,8 +111,11 @@ elif menu == "SVM":
         preco = st.number_input("Informe o Preço", min_value=0.0, key="svm_preco")
         quantidade = st.number_input("Informe a Quantidade", min_value=0, key="svm_quantidade")
         if st.button("Classificar com SVM"):
-            pred = st.session_state.modelo_svm.predict([[preco, quantidade]])
-            st.success(f"Demanda Prevista: {pred[0]}")
+            if preco > 0 or quantidade > 0:
+                pred = st.session_state.modelo_svm.predict([[preco, quantidade]])
+                st.success(f"Demanda Prevista: {pred[0]}")
+            else:
+                st.warning("Por favor, insira valores maiores que zero para Preço ou Quantidade.")
     else:
         st.info("Classificador ainda não treinado.")
 
