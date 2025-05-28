@@ -9,7 +9,7 @@ from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Classificação de Plantas", layout="wide")
-st.title("🌱 Software para Classificação de Plantas")
+st.title("Previsao Inteligente Autopeças")
 
 # Carrega e prepara os dados
 url_dados = "https://raw.githubusercontent.com/RenanBelchior/Trabalho-Topicos-Big-Data-em-Python/main/historico_vendas.csv"
