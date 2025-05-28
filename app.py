@@ -9,7 +9,7 @@ from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Classificação de Plantas", layout="wide")
-st.title("Previsao Inteligente Autopeças")
+st.title("🌱 Software para Classificação de Plantas")
 
 # Carrega e prepara os dados
 url_dados = "https://raw.githubusercontent.com/RenanBelchior/Trabalho-Topicos-Big-Data-em-Python/main/historico_vendas.csv"
@@ -66,13 +66,16 @@ def testar_svm():
 # Menu Principal
 if st.session_state.tela == "menu_principal":
     st.subheader("Menu Principal")
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
         if st.button("1 - Árvore de Decisão"):
             st.session_state.tela = "arvore_menu"
     with col2:
         if st.button("2 - SVM"):
             st.session_state.tela = "svm_menu"
+    with col3:
+        if st.button("3 - Exibir Desempenho dos Classificadores"):
+            st.session_state.tela = "comparativo"
 
 # Submenu Árvore de Decisão
 elif st.session_state.tela == "arvore_menu":
@@ -122,3 +125,36 @@ elif st.session_state.tela == "svm_menu":
 
         if st.button("3 - Voltar"):
             st.session_state.tela = "menu_principal"
+
+# Comparativo entre os classificadores
+elif st.session_state.tela == "comparativo":
+    st.subheader("📊 Comparativo de Desempenho dos Classificadores")
+    historico_arvore = [h for h in st.session_state.historico if h['modelo'] == 'Árvore de Decisão']
+    historico_svm = [h for h in st.session_state.historico if h['modelo'] == 'SVM']
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("**Árvore de Decisão:**")
+        if historico_arvore:
+            for i, item in enumerate(historico_arvore[::-1], 1):
+                st.write(f"{i}º teste: Acurácia = {item['acuracia']*100:.2f}%")
+        else:
+            st.info("Nenhum teste da árvore ainda.")
+
+    with col2:
+        st.markdown("**SVM:**")
+        if historico_svm:
+            for i, item in enumerate(historico_svm[::-1], 1):
+                st.write(f"{i}º teste: Acurácia = {item['acuracia']*100:.2f}%")
+        else:
+            st.info("Nenhum teste do SVM ainda.")
+
+    st.markdown("---")
+    melhor = st.session_state.melhor_modelo
+    if melhor['modelo']:
+        st.success(f"🏆 Melhor desempenho até agora: **{melhor['modelo']}** com acurácia de **{melhor['acuracia']*100:.2f}%**")
+    else:
+        st.warning("Nenhum classificador foi testado ainda.")
+
+    if st.button("Voltar"):
+        st.session_state.tela = "menu_principal"
