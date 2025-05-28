@@ -33,14 +33,17 @@ y = df[col_saida]
 # Divisão em treino e teste
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-# Inicialização dos classificadores e acurácias
-modelo_dt = None
-modelo_svm = None
-acc_dt = None
-acc_svm = None
+# Inicialização do estado
+if 'modelo_dt' not in st.session_state:
+    st.session_state.modelo_dt = None
+    st.session_state.acc_dt = None
+
+if 'modelo_svm' not in st.session_state:
+    st.session_state.modelo_svm = None
+    st.session_state.acc_svm = None
 
 # Menu principal
-menu = st.sidebar.selectbox("Menu Principal", [
+menu = st.sidebar.radio("Menu Principal", [
     "Árvore de Decisão",
     "SVM",
     "Exibir Desempenho dos Classificadores",
@@ -49,83 +52,67 @@ menu = st.sidebar.selectbox("Menu Principal", [
 
 # Submenu Árvore de Decisão
 if menu == "Árvore de Decisão":
-    submenu_dt = st.sidebar.radio("Opções - Árvore de Decisão", [
-        "Treinar o Classificador Árvore de Decisão",
-        "Mostrar o Desempenho",
-        "Mostrar Árvore",
-        "Fazer nova Classificação",
-        "Retornar ao Menu Principal"
-    ])
-
-    if submenu_dt == "Treinar o Classificador Árvore de Decisão":
+    st.subheader("🌳 Menu - Árvore de Decisão")
+    if st.button("Treinar o Classificador Árvore de Decisão"):
         modelo_dt = DecisionTreeClassifier(random_state=42)
         modelo_dt.fit(X_train, y_train)
         y_pred_dt = modelo_dt.predict(X_test)
         acc_dt = accuracy_score(y_test, y_pred_dt)
+        st.session_state.modelo_dt = modelo_dt
+        st.session_state.acc_dt = acc_dt
         st.success(f"Classificador Árvore de Decisão treinado com acurácia: {acc_dt * 100:.2f}%")
 
-    elif submenu_dt == "Mostrar o Desempenho":
-        if acc_dt is not None:
-            st.info(f"Acurácia da Árvore de Decisão: {acc_dt * 100:.2f}%")
-        else:
-            st.warning("O classificador ainda não foi treinado.")
+    if st.session_state.modelo_dt:
+        if st.button("Mostrar Desempenho da Árvore"):
+            st.info(f"Acurácia: {st.session_state.acc_dt * 100:.2f}%")
 
-    elif submenu_dt == "Mostrar Árvore":
-        if modelo_dt is not None:
+        if st.button("Mostrar Árvore"):
             fig, ax = plt.subplots(figsize=(12, 6))
-            plot_tree(modelo_dt, feature_names=col_auxiliares, class_names=True, filled=True, ax=ax)
+            plot_tree(st.session_state.modelo_dt, feature_names=col_auxiliares, class_names=True, filled=True, ax=ax)
             st.pyplot(fig)
-        else:
-            st.warning("O classificador ainda não foi treinado.")
 
-    elif submenu_dt == "Fazer nova Classificação":
-        if modelo_dt is not None:
-            preco = st.number_input("Informe o Preço", min_value=0.0)
-            quantidade = st.number_input("Informe a Quantidade", min_value=0)
-            if st.button("Classificar"):
-                pred = modelo_dt.predict([[preco, quantidade]])
-                st.success(f"Demanda Prevista: {pred[0]}")
-        else:
-            st.warning("O classificador ainda não foi treinado.")
+        st.markdown("### Fazer nova Classificação")
+        preco = st.number_input("Informe o Preço", min_value=0.0, key="dt_preco")
+        quantidade = st.number_input("Informe a Quantidade", min_value=0, key="dt_qtd")
+        if st.button("Classificar com Árvore de Decisão"):
+            pred = st.session_state.modelo_dt.predict([[preco, quantidade]])
+            st.success(f"Demanda Prevista: {pred[0]}")
+    else:
+        st.info("Classificador ainda não treinado.")
 
 # Submenu SVM
 elif menu == "SVM":
-    submenu_svm = st.sidebar.radio("Opções - SVM", [
-        "Treinar Classificador SVM",
-        "Mostrar o desempenho",
-        "Fazer nova Classificação",
-        "Retornar ao Menu Principal"
-    ])
-
-    if submenu_svm == "Treinar Classificador SVM":
+    st.subheader("🧠 Menu - SVM")
+    if st.button("Treinar o Classificador SVM"):
         pipeline = Pipeline([
             ('scaler', StandardScaler()),
             ('svc', SVC(kernel='linear'))
         ])
         pipeline.fit(X_train, y_train)
-        modelo_svm = pipeline
-        y_pred_svm = modelo_svm.predict(X_test)
+        y_pred_svm = pipeline.predict(X_test)
         acc_svm = accuracy_score(y_test, y_pred_svm)
+        st.session_state.modelo_svm = pipeline
+        st.session_state.acc_svm = acc_svm
         st.success(f"Classificador SVM treinado com acurácia: {acc_svm * 100:.2f}%")
 
-    elif submenu_svm == "Mostrar o desempenho":
-        if acc_svm is not None:
-            st.info(f"Acurácia do SVM: {acc_svm * 100:.2f}%")
-        else:
-            st.warning("O classificador ainda não foi treinado.")
+    if st.session_state.modelo_svm:
+        if st.button("Mostrar Desempenho do SVM"):
+            st.info(f"Acurácia: {st.session_state.acc_svm * 100:.2f}%")
 
-    elif submenu_svm == "Fazer nova Classificação":
-        if modelo_svm is not None:
-            preco = st.number_input("Informe o Preço", min_value=0.0, key="svm_preco")
-            quantidade = st.number_input("Informe a Quantidade", min_value=0, key="svm_quantidade")
-            if st.button("Classificar", key="btn_svm"):
-                pred = modelo_svm.predict([[preco, quantidade]])
-                st.success(f"Demanda Prevista: {pred[0]}")
-        else:
-            st.warning("O classificador ainda não foi treinado.")
+        st.markdown("### Fazer nova Classificação")
+        preco = st.number_input("Informe o Preço", min_value=0.0, key="svm_preco")
+        quantidade = st.number_input("Informe a Quantidade", min_value=0, key="svm_quantidade")
+        if st.button("Classificar com SVM"):
+            pred = st.session_state.modelo_svm.predict([[preco, quantidade]])
+            st.success(f"Demanda Prevista: {pred[0]}")
+    else:
+        st.info("Classificador ainda não treinado.")
 
 # Exibir melhor desempenho
 elif menu == "Exibir Desempenho dos Classificadores":
+    acc_dt = st.session_state.acc_dt
+    acc_svm = st.session_state.acc_svm
+
     if acc_dt is not None or acc_svm is not None:
         melhor_modelo = ""
         melhor_acc = 0
