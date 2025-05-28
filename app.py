@@ -40,25 +40,41 @@ if 'modelo_dt' not in st.session_state:
     st.session_state.modelo_dt = None
 if 'modelo_svm' not in st.session_state:
     st.session_state.modelo_svm = None
+if 'menu' not in st.session_state:
+    st.session_state.menu = "inicio"
+
+# Tela de introdução
+if st.session_state.menu == "inicio":
+    col_esq, col_centro, col_dir = st.columns([1, 2, 1])
+    with col_centro:
+        st.image("https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZGlpODdhMGtmYmZwbjM1eDhkcjFqNjN6bXF1ZGZvaThlNnNrcDV2dSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/J1kWQjF5b0M6W9Vi9n/giphy.gif", width=400)
+        st.markdown("""
+        ## Bem-vindo ao Sistema de Previsão de Demanda de Autopeças 🚗🔧
+        Este sistema utiliza algoritmos de aprendizado de máquina para prever a demanda de produtos com base em seu preço e quantidade vendida.  
+        Você pode treinar classificadores, visualizar seus desempenhos e comparar resultados entre diferentes modelos.
+        """)
+        if st.button("Ir para o Menu Principal"):
+            st.session_state.menu = None
 
 # Menu principal
-st.subheader("Menu Principal")
-col1, col2, col3, col4 = st.columns(4)
+if st.session_state.menu is None:
+    st.subheader("Menu Principal")
+    col1, col2, col3, col4 = st.columns(4)
 
-if col1.button("Árvore de Decisão"):
-    st.session_state.menu = "arvore"
-elif col2.button("SVM"):
-    st.session_state.menu = "svm"
-elif col3.button("Exibir Desempenho dos Classificadores"):
-    st.session_state.menu = "comparativo"
-elif col4.button("Limpar Histórico Geral"):
-    st.session_state.historico_dt.clear()
-    st.session_state.historico_svm.clear()
-    st.session_state.melhor = {'modelo': None, 'acuracia': 0}
-    st.success("Histórico geral limpo com sucesso!")
+    if col1.button("Árvore de Decisão"):
+        st.session_state.menu = "arvore"
+    elif col2.button("SVM"):
+        st.session_state.menu = "svm"
+    elif col3.button("Exibir Desempenho dos Classificadores"):
+        st.session_state.menu = "comparativo"
+    elif col4.button("Limpar Histórico Geral"):
+        st.session_state.historico_dt.clear()
+        st.session_state.historico_svm.clear()
+        st.session_state.melhor = {'modelo': None, 'acuracia': 0}
+        st.success("Histórico geral limpo com sucesso!")
 
 # Submenu Árvore de Decisão
-if st.session_state.get("menu") == "arvore":
+if st.session_state.menu == "arvore":
     st.subheader("Menu - Árvore de Decisão")
     if st.button("Fazer Nova Classificação"):
         modelo = DecisionTreeClassifier(random_state=42)
@@ -93,7 +109,7 @@ if st.session_state.get("menu") == "arvore":
         st.session_state.menu = None
 
 # Submenu SVM
-if st.session_state.get("menu") == "svm":
+if st.session_state.menu == "svm":
     st.subheader("Menu - SVM")
     if st.button("Fazer Nova Classificação"):
         pipeline = Pipeline([
@@ -123,7 +139,7 @@ if st.session_state.get("menu") == "svm":
         st.session_state.menu = None
 
 # Comparativo de classificadores
-if st.session_state.get("menu") == "comparativo":
+if st.session_state.menu == "comparativo":
     st.subheader("📊 Comparativo de Desempenho")
     acc_dt = max(st.session_state.historico_dt) if st.session_state.historico_dt else 0
     acc_svm = max(st.session_state.historico_svm) if st.session_state.historico_svm else 0
