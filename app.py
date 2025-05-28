@@ -2,14 +2,15 @@ import streamlit as st
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, plot_tree
 from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
 
 # Configuração da página
 st.set_page_config(page_title="Previsão de Demanda - Autopeças", layout="wide")
-st.title("📦 Previsão Inteligente Autopeças")
+st.title("📦 Sistema de Previsão de Demanda de Autopeças")
 
 # Leitura direta do arquivo do GitHub
 url_dados = "https://raw.githubusercontent.com/RenanBelchior/Trabalho-Topicos-Big-Data-em-Python/main/historico_vendas.csv"
@@ -19,12 +20,6 @@ df = pd.read_csv(url_dados, encoding='utf-8-sig')
 col_auxiliares = ['Preco', 'Quantidade']
 col_saida = 'Demanda'
 st.info(f"**Colunas de entrada:** {col_auxiliares} | **Coluna de saída:** {col_saida}")
-
-# Inicializa histórico e melhor resultado
-if 'historico' not in st.session_state:
-    st.session_state.historico = []
-if 'melhor' not in st.session_state:
-    st.session_state.melhor = {'modelo': None, 'acuracia': 0}
 
 # Codificação de variáveis categóricas
 le = LabelEncoder()
@@ -38,79 +33,114 @@ y = df[col_saida]
 # Divisão em treino e teste
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-# Escolha do classificador
-st.subheader("Classificadores")
-aba = st.radio("Escolha um classificador:", ["Árvore de Decisão", "SVM"])
+# Inicialização dos classificadores e acurácias
+modelo_dt = None
+modelo_svm = None
+acc_dt = None
+acc_svm = None
 
-if aba == "Árvore de Decisão":
-    if st.button("Testar Classificador Árvore de Decisão"):
+# Menu principal
+menu = st.sidebar.selectbox("Menu Principal", [
+    "Árvore de Decisão",
+    "SVM",
+    "Exibir Desempenho dos Classificadores",
+    "Encerrar"
+])
+
+# Submenu Árvore de Decisão
+if menu == "Árvore de Decisão":
+    submenu_dt = st.sidebar.radio("Opções - Árvore de Decisão", [
+        "Treinar o Classificador Árvore de Decisão",
+        "Mostrar o Desempenho",
+        "Mostrar Árvore",
+        "Fazer nova Classificação",
+        "Retornar ao Menu Principal"
+    ])
+
+    if submenu_dt == "Treinar o Classificador Árvore de Decisão":
         modelo_dt = DecisionTreeClassifier(random_state=42)
         modelo_dt.fit(X_train, y_train)
         y_pred_dt = modelo_dt.predict(X_test)
         acc_dt = accuracy_score(y_test, y_pred_dt)
-        st.success(f"Acurácia da Árvore de Decisão: {acc_dt * 100:.2f}%")
+        st.success(f"Classificador Árvore de Decisão treinado com acurácia: {acc_dt * 100:.2f}%")
 
-        st.session_state.historico.append({
-            'modelo': 'Árvore de Decisão',
-            'acuracia': acc_dt
-        })
+    elif submenu_dt == "Mostrar o Desempenho":
+        if acc_dt is not None:
+            st.info(f"Acurácia da Árvore de Decisão: {acc_dt * 100:.2f}%")
+        else:
+            st.warning("O classificador ainda não foi treinado.")
 
-        if acc_dt > st.session_state.melhor['acuracia']:
-            st.session_state.melhor = {
-                'modelo': 'Árvore de Decisão',
-                'acuracia': acc_dt
-            }
+    elif submenu_dt == "Mostrar Árvore":
+        if modelo_dt is not None:
+            fig, ax = plt.subplots(figsize=(12, 6))
+            plot_tree(modelo_dt, feature_names=col_auxiliares, class_names=True, filled=True, ax=ax)
+            st.pyplot(fig)
+        else:
+            st.warning("O classificador ainda não foi treinado.")
 
-elif aba == "SVM":
-    tipo_svm = st.radio("Tipo de SVM", ["SVM Básico", "SVM com Pipeline"])
+    elif submenu_dt == "Fazer nova Classificação":
+        if modelo_dt is not None:
+            preco = st.number_input("Informe o Preço", min_value=0.0)
+            quantidade = st.number_input("Informe a Quantidade", min_value=0)
+            if st.button("Classificar"):
+                pred = modelo_dt.predict([[preco, quantidade]])
+                st.success(f"Demanda Prevista: {pred[0]}")
+        else:
+            st.warning("O classificador ainda não foi treinado.")
 
-    if tipo_svm == "SVM Básico":
-        if st.button("Testar SVM Básico"):
-            modelo_svm = SVC(kernel='linear')
-            modelo_svm.fit(X_train, y_train)
-            y_pred_svm = modelo_svm.predict(X_test)
-            acc_svm = accuracy_score(y_test, y_pred_svm)
-            st.success(f"Acurácia do SVM Básico: {acc_svm * 100:.2f}%")
+# Submenu SVM
+elif menu == "SVM":
+    submenu_svm = st.sidebar.radio("Opções - SVM", [
+        "Treinar Classificador SVM",
+        "Mostrar o desempenho",
+        "Fazer nova Classificação",
+        "Retornar ao Menu Principal"
+    ])
 
-            st.session_state.historico.append({
-                'modelo': 'SVM Básico',
-                'acuracia': acc_svm
-            })
+    if submenu_svm == "Treinar Classificador SVM":
+        pipeline = Pipeline([
+            ('scaler', StandardScaler()),
+            ('svc', SVC(kernel='linear'))
+        ])
+        pipeline.fit(X_train, y_train)
+        modelo_svm = pipeline
+        y_pred_svm = modelo_svm.predict(X_test)
+        acc_svm = accuracy_score(y_test, y_pred_svm)
+        st.success(f"Classificador SVM treinado com acurácia: {acc_svm * 100:.2f}%")
 
-            if acc_svm > st.session_state.melhor['acuracia']:
-                st.session_state.melhor = {
-                    'modelo': 'SVM Básico',
-                    'acuracia': acc_svm
-                }
+    elif submenu_svm == "Mostrar o desempenho":
+        if acc_svm is not None:
+            st.info(f"Acurácia do SVM: {acc_svm * 100:.2f}%")
+        else:
+            st.warning("O classificador ainda não foi treinado.")
 
-    elif tipo_svm == "SVM com Pipeline":
-        if st.button("Testar SVM com Pipeline"):
-            pipeline = Pipeline([
-                ('scaler', StandardScaler()),
-                ('svc', SVC(kernel='linear'))
-            ])
-            pipeline.fit(X_train, y_train)
-            y_pred_pipeline = pipeline.predict(X_test)
-            acc_pipeline = accuracy_score(y_test, y_pred_pipeline)
-            st.success(f"Acurácia do SVM com Pipeline: {acc_pipeline * 100:.2f}%")
+    elif submenu_svm == "Fazer nova Classificação":
+        if modelo_svm is not None:
+            preco = st.number_input("Informe o Preço", min_value=0.0, key="svm_preco")
+            quantidade = st.number_input("Informe a Quantidade", min_value=0, key="svm_quantidade")
+            if st.button("Classificar", key="btn_svm"):
+                pred = modelo_svm.predict([[preco, quantidade]])
+                st.success(f"Demanda Prevista: {pred[0]}")
+        else:
+            st.warning("O classificador ainda não foi treinado.")
 
-            st.session_state.historico.append({
-                'modelo': 'SVM com Pipeline',
-                'acuracia': acc_pipeline
-            })
+# Exibir melhor desempenho
+elif menu == "Exibir Desempenho dos Classificadores":
+    if acc_dt is not None or acc_svm is not None:
+        melhor_modelo = ""
+        melhor_acc = 0
 
-            if acc_pipeline > st.session_state.melhor['acuracia']:
-                st.session_state.melhor = {
-                    'modelo': 'SVM com Pipeline',
-                    'acuracia': acc_pipeline
-                }
+        if acc_dt is not None and (acc_svm is None or acc_dt > acc_svm):
+            melhor_modelo = "Árvore de Decisão"
+            melhor_acc = acc_dt
+        elif acc_svm is not None:
+            melhor_modelo = "SVM"
+            melhor_acc = acc_svm
 
-# Histórico e melhor desempenho
-if st.session_state.historico:
-    st.subheader("📊 Histórico de Testes")
-    for i, item in enumerate(st.session_state.historico[::-1]):
-        st.markdown(f"**Teste {len(st.session_state.historico)-i}:** Modelo: `{item['modelo']}` | Acurácia: `{item['acuracia'] * 100:.2f}%`")
+        st.success(f"Melhor modelo: {melhor_modelo} com acurácia de {melhor_acc * 100:.2f}%")
+    else:
+        st.warning("Nenhum classificador foi treinado ainda.")
 
-if st.session_state.melhor['modelo']:
-    st.subheader("⭐ Melhor Desempenho Atual")
-    st.markdown(f"**Modelo:** `{st.session_state.melhor['modelo']}` | **Acurácia:** `{st.session_state.melhor['acuracia'] * 100:.2f}%`")
+# Encerrar
+elif menu == "Encerrar":
+    st.warning("Encerrando aplicação...")
