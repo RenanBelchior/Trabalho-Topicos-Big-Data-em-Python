@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 # Configuração da página
 st.set_page_config(page_title="Previsão de Demanda - Autopeças", layout="wide")
-st.title("📦 Sistema de Previsão de Demanda de Autopeças")
+st.title("📦 Classificador Inteligente Autopeças")
 
 # Leitura dos dados
 dados_url = "https://raw.githubusercontent.com/RenanBelchior/Trabalho-Topicos-Big-Data-em-Python/main/historico_vendas.csv"
