@@ -66,63 +66,59 @@ def testar_svm():
 # Menu Principal
 if st.session_state.tela == "menu_principal":
     st.subheader("Menu Principal")
-    opcao = st.radio("Escolha uma opção:", [
-        "1 - Árvore de Decisão",
-        "2 - SVM"
-    ])
-
-    if opcao == "1 - Árvore de Decisão":
-        st.session_state.tela = "arvore_menu"
-    elif opcao == "2 - SVM":
-        st.session_state.tela = "svm_menu"
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("1 - Árvore de Decisão"):
+            st.session_state.tela = "arvore_menu"
+    with col2:
+        if st.button("2 - SVM"):
+            st.session_state.tela = "svm_menu"
 
 # Submenu Árvore de Decisão
 elif st.session_state.tela == "arvore_menu":
     st.subheader("Árvore de Decisão")
-    opcao = st.radio("Escolha uma opção:", [
-        "1 - Mostrar desempenho",
-        "2 - Mostrar árvore",
-        "3 - Fazer nova classificação",
-        "4 - Voltar"
-    ])
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("1 - Mostrar desempenho"):
+            historico = [h for h in st.session_state.historico if h['modelo'] == 'Árvore de Decisão']
+            if historico:
+                for i, item in enumerate(historico[::-1], 1):
+                    st.write(f"{i}º teste: Acurácia = {item['acuracia']*100:.2f}%")
+            else:
+                st.info("Nenhum teste registrado ainda.")
 
-    if opcao == "1 - Mostrar desempenho":
-        historico = [h for h in st.session_state.historico if h['modelo'] == 'Árvore de Decisão']
-        if historico:
-            for i, item in enumerate(historico[::-1], 1):
-                st.write(f"{i}º teste: Acurácia = {item['acuracia']*100:.2f}%")
-        else:
-            st.info("Nenhum teste registrado ainda.")
-    elif opcao == "2 - Mostrar árvore":
-        modelo, _ = testar_arvore()
-        st.write("Visualização da Árvore de Decisão:")
-        fig, ax = plt.subplots(figsize=(12, 6))
-        plot_tree(modelo, filled=True, feature_names=colunas_entrada, class_names=[str(c) for c in sorted(y.unique())], ax=ax)
-        st.pyplot(fig)
-    elif opcao == "3 - Fazer nova classificação":
-        _, acc = testar_arvore()
-        st.success(f"Classificação realizada. Acurácia = {acc * 100:.2f}%")
-    elif opcao == "4 - Voltar":
-        st.session_state.tela = "menu_principal"
+        if st.button("2 - Mostrar árvore"):
+            modelo, _ = testar_arvore()
+            st.write("Visualização da Árvore de Decisão:")
+            fig, ax = plt.subplots(figsize=(12, 6))
+            plot_tree(modelo, filled=True, feature_names=colunas_entrada, class_names=[str(c) for c in sorted(y.unique())], ax=ax)
+            st.pyplot(fig)
+
+    with col2:
+        if st.button("3 - Fazer nova classificação"):
+            _, acc = testar_arvore()
+            st.success(f"Classificação realizada. Acurácia = {acc * 100:.2f}%")
+
+        if st.button("4 - Voltar"):
+            st.session_state.tela = "menu_principal"
 
 # Submenu SVM
 elif st.session_state.tela == "svm_menu":
     st.subheader("SVM")
-    opcao = st.radio("Escolha uma opção:", [
-        "1 - Mostrar desempenho",
-        "2 - Fazer nova classificação",
-        "3 - Voltar"
-    ])
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("1 - Mostrar desempenho"):
+            historico = [h for h in st.session_state.historico if h['modelo'] == 'SVM']
+            if historico:
+                for i, item in enumerate(historico[::-1], 1):
+                    st.write(f"{i}º teste: Acurácia = {item['acuracia']*100:.2f}%")
+            else:
+                st.info("Nenhum teste registrado ainda.")
 
-    if opcao == "1 - Mostrar desempenho":
-        historico = [h for h in st.session_state.historico if h['modelo'] == 'SVM']
-        if historico:
-            for i, item in enumerate(historico[::-1], 1):
-                st.write(f"{i}º teste: Acurácia = {item['acuracia']*100:.2f}%")
-        else:
-            st.info("Nenhum teste registrado ainda.")
-    elif opcao == "2 - Fazer nova classificação":
-        _, acc = testar_svm()
-        st.success(f"Classificação realizada. Acurácia = {acc * 100:.2f}%")
-    elif opcao == "3 - Voltar":
-        st.session_state.tela = "menu_principal"
+    with col2:
+        if st.button("2 - Fazer nova classificação"):
+            _, acc = testar_svm()
+            st.success(f"Classificação realizada. Acurácia = {acc * 100:.2f}%")
+
+        if st.button("3 - Voltar"):
+            st.session_state.tela = "menu_principal"
