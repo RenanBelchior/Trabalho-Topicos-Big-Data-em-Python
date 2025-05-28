@@ -68,7 +68,7 @@ if st.session_state.get("menu") == "arvore":
         st.session_state.historico_dt.append(acc)
         if acc > st.session_state.melhor['acuracia']:
             st.session_state.melhor = {'modelo': 'Árvore de Decisão', 'acuracia': acc}
-        st.success(f"Acurácia da Árvore de Decisão: {acc * 100:.2f}%")
+        st.success("Classificador treinado com sucesso")
 
     if st.button("Mostrar Desempenho"):
         if st.session_state.historico_dt:
@@ -106,7 +106,7 @@ if st.session_state.get("menu") == "svm":
         st.session_state.historico_svm.append(acc)
         if acc > st.session_state.melhor['acuracia']:
             st.session_state.melhor = {'modelo': 'SVM', 'acuracia': acc}
-        st.success(f"Acurácia do SVM: {acc * 100:.2f}%")
+        st.success("Classificador treinado com sucesso")
 
     if st.button("Mostrar Desempenho"):
         if st.session_state.historico_svm:
