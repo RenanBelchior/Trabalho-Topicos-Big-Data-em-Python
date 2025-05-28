@@ -6,7 +6,6 @@ from sklearn.tree import DecisionTreeClassifier, plot_tree
 from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score
-import time
 
 # Configuração da página
 st.set_page_config(page_title="Previsão de Demanda - Autopeças", layout="wide")
@@ -64,7 +63,7 @@ st.info(f"**Colunas de entrada:** {col_auxiliares} | **Coluna de saída:** {col_
 if st.session_state.menu == 'principal':
     st.subheader("MENU PRINCIPAL")
     opcao = st.radio("Escolha uma opção:", 
-                     ["Árvore de Decisão", "SVM", "Exibir Desempenhos dos Classificadores", "Encerrar programa"])
+                     ["Árvore de Decisão", "SVM", "Exibir Desempenhos dos Classificadores"])
     
     if opcao == "Árvore de Decisão":
         st.session_state.menu = 'arvore_decisao'
@@ -91,23 +90,12 @@ if st.session_state.menu == 'principal':
         if st.button("Voltar ao Menu Principal"):
             st.experimental_rerun()
 
-    elif opcao == "Encerrar programa":
-        st.warning("O programa será encerrado em alguns segundos...")
-        # Script para fechar aba automaticamente
-        close_script = """
-        <script>
-        setTimeout(() => { window.close(); }, 3000);
-        </script>
-        """
-        st.markdown(close_script, unsafe_allow_html=True)
-
 # Submenu Árvore de Decisão
 elif st.session_state.menu == 'arvore_decisao':
     st.subheader("Árvore de Decisão - MENU")
     opcao_dt = st.radio("Escolha uma opção:", ["Mostrar Desempenho", "Mostrar Árvore", "Fazer Nova Classificação", "Retornar ao Menu Principal"])
 
     if opcao_dt == "Mostrar Desempenho":
-        # Mostrar histórico da Árvore de Decisão
         dt_historico = [h for h in st.session_state.historico if "Árvore de Decisão" in h['modelo']]
         if dt_historico:
             for i, item in enumerate(dt_historico[::-1]):
