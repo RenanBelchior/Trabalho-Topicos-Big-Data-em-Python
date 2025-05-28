@@ -80,7 +80,7 @@ elif menu == "Árvore de Decisão":
 
 # Submenu SVM
 elif menu == "SVM":
-    st.header("🔎 SVM (Máquina de Vetores de Suporte)")
+    st.header("🔎 SVM")
     if st.button("Treinar Modelo"):
         pipeline = Pipeline([
             ('scaler', StandardScaler()),
