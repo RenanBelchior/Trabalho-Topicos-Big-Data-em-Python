@@ -9,8 +9,14 @@ from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 
 # Configuração da página
-st.set_page_config(page_title="Previsão de Demanda - Autopeças", layout="wide")
-st.title("📦 Classificador Inteligente Autopeças")
+st.set_page_config(page_title="Classificador Inteligente Autopeças", layout="wide")
+st.title("🚗 Classificador Inteligente Autopeças")
+st.markdown(
+    """
+    Sistema para previsão de demanda de autopeças utilizando modelos de Machine Learning.
+    Escolha um modelo no menu lateral para começar.
+    """
+)
 
 # Leitura dos dados
 dados_url = "https://raw.githubusercontent.com/RenanBelchior/Trabalho-Topicos-Big-Data-em-Python/main/historico_vendas.csv"
@@ -41,28 +47,18 @@ if 'modelo_dt' not in st.session_state:
 if 'modelo_svm' not in st.session_state:
     st.session_state.modelo_svm = None
 
-# Menu principal (só mostra se nenhum submenu estiver ativo)
-if st.session_state.get("menu") is None:
-    st.subheader("Menu Principal")
-    col1, col2, col3, col4 = st.columns(4)
+# Menu lateral para navegação
+menu = st.sidebar.radio("🔍 Navegação", ["Menu Principal", "Árvore de Decisão", "SVM", "Comparativo de Desempenho", "Limpar Histórico"])
 
-    if col1.button("Árvore de Decisão"):
-        st.session_state.menu = "arvore"
-    elif col2.button("SVM"):
-        st.session_state.menu = "svm"
-    elif col3.button("Exibir Desempenho dos Classificadores"):
-        st.session_state.menu = "comparativo"
-    elif col4.button("Limpar Histórico Geral"):
-        st.session_state.historico_dt.clear()
-        st.session_state.historico_svm.clear()
-        st.session_state.melhor = {'modelo': None, 'acuracia': 0}
-        st.success("Histórico geral limpo com sucesso!")
-
+# Menu Principal
+if menu == "Menu Principal":
+    st.header("🏠 Menu Principal")
+    st.markdown("Selecione um item no menu lateral para iniciar.")
 
 # Submenu Árvore de Decisão
-if st.session_state.get("menu") == "arvore":
-    st.subheader("Menu - Árvore de Decisão")
-    if st.button("Fazer Nova Classificação"):
+elif menu == "Árvore de Decisão":
+    st.header("🌳 Árvore de Decisão")
+    if st.button("Treinar Modelo"):
         modelo = DecisionTreeClassifier(random_state=42)
         modelo.fit(X_train, y_train)
         acc = accuracy_score(y_test, modelo.predict(X_test))
@@ -70,34 +66,28 @@ if st.session_state.get("menu") == "arvore":
         st.session_state.historico_dt.append(acc)
         if acc > st.session_state.melhor['acuracia']:
             st.session_state.melhor = {'modelo': 'Árvore de Decisão', 'acuracia': acc}
-        st.success("Classificador treinado com sucesso")
+        st.success(f"Modelo treinado com sucesso! Acurácia: {acc * 100:.2f}%")
 
-    if st.button("Mostrar Desempenho"):
-        if st.session_state.historico_dt:
-            for i, acc in enumerate(reversed(st.session_state.historico_dt)):
-                st.markdown(f"**Teste {len(st.session_state.historico_dt)-i}:** {acc * 100:.2f}%")
-        else:
-            st.warning("Nenhum desempenho registrado ainda.")
+    st.markdown("### Histórico de Acurácia")
+    if st.session_state.historico_dt:
+        for i, acc in enumerate(reversed(st.session_state.historico_dt), 1):
+            st.write(f"Teste {len(st.session_state.historico_dt)-i+1}: **{acc * 100:.2f}%**")
+    else:
+        st.info("Nenhum histórico registrado.")
 
-    if st.button("Mostrar Árvore"):
+    if st.button("Mostrar Árvore de Decisão"):
         if st.session_state.modelo_dt:
             fig, ax = plt.subplots(figsize=(12, 6))
-            plot_tree(st.session_state.modelo_dt, feature_names=col_auxiliares, class_names=True, filled=True, ax=ax)
+            plot_tree(st.session_state.modelo_dt, feature_names=col_auxiliares,
+                      class_names=True, filled=True, ax=ax)
             st.pyplot(fig)
         else:
-            st.warning("Treine o modelo primeiro usando 'Fazer Nova Classificação'.")
-
-    if st.button("Remover Histórico da Árvore de Decisão"):
-        st.session_state.historico_dt.clear()
-        st.success("Histórico da Árvore de Decisão limpo.")
-
-    if st.button("Voltar ao Menu Principal"):
-        st.session_state.menu = None
+            st.warning("Treine o modelo antes de visualizar a árvore.")
 
 # Submenu SVM
-if st.session_state.get("menu") == "svm":
-    st.subheader("Menu - SVM")
-    if st.button("Fazer Nova Classificação"):
+elif menu == "SVM":
+    st.header("🔎 SVM (Máquina de Vetores de Suporte)")
+    if st.button("Treinar Modelo"):
         pipeline = Pipeline([
             ('scaler', StandardScaler()),
             ('svc', SVC(kernel='linear'))
@@ -108,37 +98,43 @@ if st.session_state.get("menu") == "svm":
         st.session_state.historico_svm.append(acc)
         if acc > st.session_state.melhor['acuracia']:
             st.session_state.melhor = {'modelo': 'SVM', 'acuracia': acc}
-        st.success("Classificador treinado com sucesso")
+        st.success(f"Modelo treinado com sucesso! Acurácia: {acc * 100:.2f}%")
 
-    if st.button("Mostrar Desempenho"):
-        if st.session_state.historico_svm:
-            for i, acc in enumerate(reversed(st.session_state.historico_svm)):
-                st.markdown(f"**Teste {len(st.session_state.historico_svm)-i}:** {acc * 100:.2f}%")
-        else:
-            st.warning("Nenhum desempenho registrado ainda.")
+    st.markdown("### Histórico de Acurácia")
+    if st.session_state.historico_svm:
+        for i, acc in enumerate(reversed(st.session_state.historico_svm), 1):
+            st.write(f"Teste {len(st.session_state.historico_svm)-i+1}: **{acc * 100:.2f}%**")
+    else:
+        st.info("Nenhum histórico registrado.")
 
-    if st.button("Remover Histórico do SVM"):
-        st.session_state.historico_svm.clear()
-        st.success("Histórico do SVM limpo.")
+# Submenu Comparativo
+elif menu == "Comparativo de Desempenho":
+    st.header("📊 Comparativo de Desempenho dos Classificadores")
 
-    if st.button("Voltar ao Menu Principal"):
-        st.session_state.menu = None
-
-# Comparativo de classificadores
-if st.session_state.get("menu") == "comparativo":
-    st.subheader("📊 Comparativo de Desempenho")
     acc_dt = max(st.session_state.historico_dt) if st.session_state.historico_dt else 0
     acc_svm = max(st.session_state.historico_svm) if st.session_state.historico_svm else 0
 
-    st.markdown(f"**Árvore de Decisão:** {acc_dt * 100:.2f}%")
-    st.markdown(f"**SVM:** {acc_svm * 100:.2f}%")
+    col1, col2 = st.columns(2)
+    col1.metric("Árvore de Decisão", f"{acc_dt * 100:.2f} %")
+    col2.metric("SVM", f"{acc_svm * 100:.2f} %")
 
     if acc_dt > acc_svm:
-        st.success("🔍 Melhor desempenho: Árvore de Decisão")
+        st.success(f"🔍 Melhor desempenho: Árvore de Decisão ({acc_dt*100:.2f}%)")
     elif acc_svm > acc_dt:
-        st.success("🔍 Melhor desempenho: SVM")
+        st.success(f"🔍 Melhor desempenho: SVM ({acc_svm*100:.2f}%)")
     else:
-        st.info("🔍 Ambos os classificadores possuem desempenho igual ou não foram testados ainda.")
+        st.info("🔍 Ambos os classificadores possuem desempenho igual ou ainda não foram treinados.")
 
-    if st.button("Voltar ao Menu Principal"):
-        st.session_state.menu = None
+# Limpar Histórico
+elif menu == "Limpar Histórico":
+    st.header("🧹 Limpar Histórico Geral")
+    if st.button("Confirmar limpeza de todos os históricos"):
+        st.session_state.historico_dt.clear()
+        st.session_state.historico_svm.clear()
+        st.session_state.melhor = {'modelo': None, 'acuracia': 0}
+        st.session_state.modelo_dt = None
+        st.session_state.modelo_svm = None
+        st.success("Histórico geral limpo com sucesso!")
+    else:
+        st.info("Clique no botão acima para limpar todo o histórico.")
+
