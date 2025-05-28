@@ -1,83 +1,61 @@
 import streamlit as st
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.tree import DecisionTreeClassifier, plot_tree
 from sklearn.svm import SVC
-from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="Classificação de Plantas", layout="wide")
-st.title("🌱 Software para Classificação de Plantas")
+# Configuração da página
+st.set_page_config(page_title="Sistema de Classificação", layout="centered")
+st.title("🌿 Sistema de Classificação de Plantas")
 
-# Carrega e prepara os dados
-url_dados = "https://raw.githubusercontent.com/RenanBelchior/Trabalho-Topicos-Big-Data-em-Python/main/historico_vendas.csv"
-df = pd.read_csv(url_dados, encoding='utf-8-sig')
-
+# Carregamento dos dados
+df = pd.read_csv("https://raw.githubusercontent.com/RenanBelchior/Trabalho-Topicos-Big-Data-em-Python/main/historico_vendas.csv")
 colunas_entrada = ['Preco', 'Quantidade']
 coluna_saida = 'Demanda'
 
-le = LabelEncoder()
-for col in df.select_dtypes(include='object').columns:
-    df[col] = le.fit_transform(df[col])
-
 X = df[colunas_entrada]
 y = df[coluna_saida]
+
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-# Inicializa estado
-if "tela" not in st.session_state:
-    st.session_state.tela = "menu_principal"
-
-if "historico" not in st.session_state:
+# Inicialização do estado
+if 'tela' not in st.session_state:
+    st.session_state.tela = 'menu_principal'
+if 'historico' not in st.session_state:
     st.session_state.historico = []
 
-if "melhor_modelo" not in st.session_state:
-    st.session_state.melhor_modelo = {'modelo': None, 'acuracia': 0}
-
-
-# Funções
+# Funções de classificação
 def testar_arvore():
     modelo = DecisionTreeClassifier(random_state=42)
     modelo.fit(X_train, y_train)
     y_pred = modelo.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
     st.session_state.historico.append({'modelo': 'Árvore de Decisão', 'acuracia': acc})
-    if acc > st.session_state.melhor_modelo['acuracia']:
-        st.session_state.melhor_modelo = {'modelo': 'Árvore de Decisão', 'acuracia': acc}
     return modelo, acc
 
-
 def testar_svm():
-    modelo = Pipeline([
-        ("scaler", StandardScaler()),
-        ("svc", SVC(kernel="linear"))
-    ])
+    modelo = SVC(kernel='linear')
     modelo.fit(X_train, y_train)
     y_pred = modelo.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
     st.session_state.historico.append({'modelo': 'SVM', 'acuracia': acc})
-    if acc > st.session_state.melhor_modelo['acuracia']:
-        st.session_state.melhor_modelo = {'modelo': 'SVM', 'acuracia': acc}
     return modelo, acc
 
-
-# Menu Principal
+# Telas
 if st.session_state.tela == "menu_principal":
     st.subheader("Menu Principal")
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     with col1:
         if st.button("1 - Árvore de Decisão"):
             st.session_state.tela = "arvore_menu"
-    with col2:
         if st.button("2 - SVM"):
             st.session_state.tela = "svm_menu"
-    with col3:
+    with col2:
         if st.button("3 - Exibir Desempenho dos Classificadores"):
             st.session_state.tela = "comparativo"
 
-# Submenu Árvore de Decisão
 elif st.session_state.tela == "arvore_menu":
     st.subheader("Árvore de Decisão")
     col1, col2 = st.columns(2)
@@ -105,7 +83,10 @@ elif st.session_state.tela == "arvore_menu":
         if st.button("4 - Voltar"):
             st.session_state.tela = "menu_principal"
 
-# Submenu SVM
+        if st.button("5 - Remover histórico"):
+            st.session_state.historico = [h for h in st.session_state.historico if h['modelo'] != 'Árvore de Decisão']
+            st.success("Histórico de Árvore de Decisão removido com sucesso.")
+
 elif st.session_state.tela == "svm_menu":
     st.subheader("SVM")
     col1, col2 = st.columns(2)
@@ -126,35 +107,43 @@ elif st.session_state.tela == "svm_menu":
         if st.button("3 - Voltar"):
             st.session_state.tela = "menu_principal"
 
-# Comparativo entre os classificadores
+        if st.button("4 - Remover histórico"):
+            st.session_state.historico = [h for h in st.session_state.historico if h['modelo'] != 'SVM']
+            st.success("Histórico de SVM removido com sucesso.")
+
 elif st.session_state.tela == "comparativo":
-    st.subheader("📊 Comparativo de Desempenho dos Classificadores")
-    historico_arvore = [h for h in st.session_state.historico if h['modelo'] == 'Árvore de Decisão']
-    historico_svm = [h for h in st.session_state.historico if h['modelo'] == 'SVM']
+    st.subheader("Comparativo de Desempenhos")
+    historico = st.session_state.historico
+    acc_arvore = [h['acuracia'] for h in historico if h['modelo'] == 'Árvore de Decisão']
+    acc_svm = [h['acuracia'] for h in historico if h['modelo'] == 'SVM']
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("**Árvore de Decisão:**")
-        if historico_arvore:
-            for i, item in enumerate(historico_arvore[::-1], 1):
-                st.write(f"{i}º teste: Acurácia = {item['acuracia']*100:.2f}%")
-        else:
-            st.info("Nenhum teste da árvore ainda.")
+    melhor_modelo = None
+    melhor_acc = 0
 
-    with col2:
-        st.markdown("**SVM:**")
-        if historico_svm:
-            for i, item in enumerate(historico_svm[::-1], 1):
-                st.write(f"{i}º teste: Acurácia = {item['acuracia']*100:.2f}%")
-        else:
-            st.info("Nenhum teste do SVM ainda.")
-
-    st.markdown("---")
-    melhor = st.session_state.melhor_modelo
-    if melhor['modelo']:
-        st.success(f"🏆 Melhor desempenho até agora: **{melhor['modelo']}** com acurácia de **{melhor['acuracia']*100:.2f}%**")
+    if acc_arvore:
+        media_arvore = sum(acc_arvore) / len(acc_arvore)
+        st.write(f"Acurácia média Árvore de Decisão: {media_arvore * 100:.2f}%")
+        if media_arvore > melhor_acc:
+            melhor_acc = media_arvore
+            melhor_modelo = "Árvore de Decisão"
     else:
-        st.warning("Nenhum classificador foi testado ainda.")
+        st.info("Sem dados para Árvore de Decisão.")
 
-    if st.button("Voltar"):
+    if acc_svm:
+        media_svm = sum(acc_svm) / len(acc_svm)
+        st.write(f"Acurácia média SVM: {media_svm * 100:.2f}%")
+        if media_svm > melhor_acc:
+            melhor_acc = media_svm
+            melhor_modelo = "SVM"
+    else:
+        st.info("Sem dados para SVM.")
+
+    if melhor_modelo:
+        st.success(f"Melhor desempenho geral: {melhor_modelo} com {melhor_acc * 100:.2f}% de acurácia média")
+
+    if st.button("Remover todo o histórico"):
+        st.session_state.historico = []
+        st.success("Histórico de todos os classificadores removido com sucesso.")
+
+    if st.button("Voltar ao menu principal"):
         st.session_state.tela = "menu_principal"
