@@ -60,7 +60,7 @@ elif menu == "Árvore de Decisão":
         st.session_state.historico_dt.append(acc)
         if acc > st.session_state.melhor['acuracia']:
             st.session_state.melhor = {'modelo': 'Árvore de Decisão', 'acuracia': acc}
-        st.success(f"Modelo treinado com sucesso! Acurácia: {acc * 100:.2f}%")
+        st.success("Classificador Treinado com Sucesso")
 
     st.markdown("### Histórico de Acurácia")
     if st.session_state.historico_dt:
@@ -92,7 +92,7 @@ elif menu == "SVM":
         st.session_state.historico_svm.append(acc)
         if acc > st.session_state.melhor['acuracia']:
             st.session_state.melhor = {'modelo': 'SVM', 'acuracia': acc}
-        st.success(f"Modelo treinado com sucesso! Acurácia: {acc * 100:.2f}%")
+        st.success("Classificador Treinado com Sucesso")
 
     st.markdown("### Histórico de Acurácia")
     if st.session_state.historico_svm:
@@ -100,6 +100,7 @@ elif menu == "SVM":
             st.write(f"Teste {len(st.session_state.historico_svm)-i+1}: **{acc * 100:.2f}%**")
     else:
         st.info("Nenhum histórico registrado.")
+
 
 # Submenu Comparativo
 elif menu == "Comparativo de Desempenho":
