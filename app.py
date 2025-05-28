@@ -17,7 +17,9 @@ url_dados = "https://raw.githubusercontent.com/RenanBelchior/Trabalho-Topicos-Bi
 df = pd.read_csv(url_dados, encoding='utf-8-sig')
 
 # Ajustes na coluna de saída
-df['Demanda'] = df['Demanda'].astype(int)
+# Remove valores nulos e garante que 'Demanda' seja numérica
+df = df.dropna(subset=['Demanda'])
+df['Demanda'] = pd.to_numeric(df['Demanda'], errors='coerce').fillna(0).astype(int)
 
 # Exibição das colunas utilizadas
 col_auxiliares = ['Preco', 'Quantidade']
