@@ -66,7 +66,7 @@ if menu == "Árvore de Decisão":
             st.session_state.melhor = {'modelo': 'Árvore de Decisão', 'acuracia': acc}
         st.success("Classificador Treinado com Sucesso")
 
-    st.markdown("### Histórico de Acurácia")
+    st.markdown("### Histórico de Desempenho")
     if st.session_state.historico_dt:
         for i, acc in enumerate(reversed(st.session_state.historico_dt), 1):
             st.write(f"Teste {len(st.session_state.historico_dt)-i+1}: **{acc * 100:.2f}%**")
