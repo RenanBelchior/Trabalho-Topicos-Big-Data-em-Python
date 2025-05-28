@@ -17,13 +17,17 @@ url_dados = "https://raw.githubusercontent.com/RenanBelchior/Trabalho-Topicos-Bi
 df = pd.read_csv(url_dados, encoding='utf-8-sig')
 
 # Ajustes na coluna de saída
-# Remove valores nulos e garante que 'Demanda' seja numérica
 df = df.dropna(subset=['Demanda'])
 df['Demanda'] = pd.to_numeric(df['Demanda'], errors='coerce').fillna(0).astype(int)
 
-# Exibição das colunas utilizadas
+# Definindo colunas de entrada e saída
 col_auxiliares = ['Preco', 'Quantidade']
 col_saida = 'Demanda'
+
+# Trata valores ausentes nas colunas de entrada preenchendo com a média
+df[col_auxiliares] = df[col_auxiliares].fillna(df[col_auxiliares].mean())
+
+# Exibição das colunas utilizadas
 st.info(f"**Colunas de entrada:** {col_auxiliares} | **Coluna de saída:** {col_saida}")
 st.sidebar.markdown("**Valores únicos de 'Demanda':**")
 st.sidebar.write(df['Demanda'].unique())
