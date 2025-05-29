@@ -63,7 +63,7 @@ def exibir_historico(lista):
 
 if menu == "Árvore de Decisão":
     st.header("🌳 Árvore de Decisão - Menu")
-    if st.button("Treinar Modelo Árvore de Decisão"): treinar_dt()
+    if st.button("Nova Classificação"): treinar_dt()
     st.subheader("Histórico de Acurácia")
     exibir_historico(st.session_state.historico_dt)
     if st.button("Mostrar Árvore de Decisão"):
@@ -76,7 +76,7 @@ if menu == "Árvore de Decisão":
 
 elif menu == "SVM":
     st.header("🔎 SVM - Menu")
-    if st.button("Treinar Modelo SVM"): treinar_svm()
+    if st.button("Nova Classificação"): treinar_svm()
     st.subheader("Histórico de Acurácia")
     exibir_historico(st.session_state.historico_svm)
 
