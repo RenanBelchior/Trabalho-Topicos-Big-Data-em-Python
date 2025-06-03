@@ -9,7 +9,7 @@ from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 
 # Configuração inicial da aplicação Streamlit
-st.set_page_config(page_title="Classificador Inteligente Autopeças", layout="wide")
+st.set_page_config(page_title="Classificador Inteligente MasterPeças", layout="wide")
 st.title("Classificador Inteligente Autopeças")
 
 # Menu lateral para navegação entre os classificadores
