@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 # Configuração inicial da aplicação Streamlit
 st.set_page_config(page_title="Classificador Inteligente MasterPeças", layout="wide")
-st.title("Classificador Inteligente Autopeças")
+st.title("Classificador Inteligente MasterPeças")
 
 # Menu lateral para navegação entre os classificadores
 menu = st.sidebar.radio("Menu Principal", ["Árvore de Decisão", "SVM", "Comparativo", "Limpar Histórico"])
