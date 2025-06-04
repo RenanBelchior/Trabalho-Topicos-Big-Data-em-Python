@@ -34,6 +34,10 @@ if 'modelo_dt' not in st.session_state:
     st.session_state.modelo_dt = None
 if 'modelo_svm' not in st.session_state:
     st.session_state.modelo_svm = None
+if 'teste_final_dt' not in st.session_state:
+    st.session_state.teste_final_dt = 0
+if 'teste_final_svm' not in st.session_state:
+    st.session_state.teste_final_svm = 0
 
 # Função para exibir histórico
 def exibir_historico(lista):
@@ -63,10 +67,11 @@ if menu == "Árvore de Decisão":
             model = DecisionTreeClassifier(random_state=42)
             model.fit(X_treino_modelo, y_treino_modelo)
             acc_teste_modelo = accuracy_score(y_teste_modelo, model.predict(X_teste_modelo))
+            acc_teste_final = accuracy_score(y_teste_final, model.predict(X_teste_final))
+
             st.session_state.modelo_dt = model
             st.session_state.historico_dt.append(acc_teste_modelo)
-
-            acc_teste_final = accuracy_score(y_teste_final, model.predict(X_teste_final))
+            st.session_state.teste_final_dt = acc_teste_final
 
             if acc_teste_modelo > st.session_state.melhor['acuracia']:
                 st.session_state.melhor = {'modelo': 'Árvore de Decisão', 'acuracia': acc_teste_modelo}
@@ -103,10 +108,11 @@ elif menu == "SVM":
             pipeline = Pipeline([('scaler', StandardScaler()), ('svc', SVC(kernel='linear'))])
             pipeline.fit(X_treino_modelo, y_treino_modelo)
             acc_teste_modelo = accuracy_score(y_teste_modelo, pipeline.predict(X_teste_modelo))
+            acc_teste_final = accuracy_score(y_teste_final, pipeline.predict(X_teste_final))
+
             st.session_state.modelo_svm = pipeline
             st.session_state.historico_svm.append(acc_teste_modelo)
-
-            acc_teste_final = accuracy_score(y_teste_final, pipeline.predict(X_teste_final))
+            st.session_state.teste_final_svm = acc_teste_final
 
             if acc_teste_modelo > st.session_state.melhor['acuracia']:
                 st.session_state.melhor = {'modelo': 'SVM', 'acuracia': acc_teste_modelo}
@@ -117,15 +123,15 @@ elif menu == "SVM":
 
 # Comparativo
 elif menu == "Comparativo":
-    st.header("📊 Comparativo de Desempenho")
-    acc_dt = max(st.session_state.historico_dt) if st.session_state.historico_dt else 0
-    acc_svm = max(st.session_state.historico_svm) if st.session_state.historico_svm else 0
+    st.header("📊 Comparativo de Desempenho - Teste Final")
+    acc_dt = st.session_state.teste_final_dt if 'teste_final_dt' in st.session_state else 0
+    acc_svm = st.session_state.teste_final_svm if 'teste_final_svm' in st.session_state else 0
     st.markdown(f"**Árvore de Decisão:** {acc_dt*100:.2f}%")
     st.markdown(f"**SVM:** {acc_svm*100:.2f}%")
     if acc_dt > acc_svm:
-        st.success("🔍 Melhor desempenho: Árvore de Decisão")
+        st.success("🔍 Melhor desempenho no teste final: Árvore de Decisão")
     elif acc_svm > acc_dt:
-        st.success("🔍 Melhor desempenho: SVM")
+        st.success("🔍 Melhor desempenho no teste final: SVM")
     else:
         st.info("🔍 Desempenho igual ou modelos não treinados.")
 
@@ -134,4 +140,6 @@ elif menu == "Limpar Histórico":
     st.session_state.historico_dt.clear()
     st.session_state.historico_svm.clear()
     st.session_state.melhor = {'modelo': None, 'acuracia': 0}
+    st.session_state.teste_final_dt = 0
+    st.session_state.teste_final_svm = 0
     st.success("Histórico geral limpo com sucesso!")
