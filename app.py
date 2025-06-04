@@ -82,7 +82,7 @@ if menu == "Árvore de Decisão":
             if acc_teste_modelo > st.session_state.melhor['acuracia']:
                 st.session_state.melhor = {'modelo': 'Árvore de Decisão', 'acuracia': acc_teste_modelo}
 
-            st.success(f"Treino (30% do treino): {acc_teste_modelo*100:.2f}% | Teste final (30% dos dados): {acc_teste_final*100:.2f}%")
+            st.success(f"Treino (30% do treino): {acc_teste_modelo*100:.2f}% | Teste final (70% dos dados): {acc_teste_final*100:.2f}%")
         else:
             st.warning("Selecione ao menos uma coluna de entrada.")
 
@@ -125,7 +125,7 @@ elif menu == "SVM":
             if acc_teste_modelo > st.session_state.melhor['acuracia']:
                 st.session_state.melhor = {'modelo': 'SVM', 'acuracia': acc_teste_modelo}
 
-            st.success(f"Treino (30% do treino): {acc_teste_modelo*100:.2f}% | Teste final (30% dos dados): {acc_teste_final*100:.2f}%")
+            st.success(f"Treino (30% do treino): {acc_teste_modelo*100:.2f}% | Teste final (70% dos dados): {acc_teste_final*100:.2f}%")
         else:
             st.warning("Selecione ao menos uma coluna de entrada.")
 
