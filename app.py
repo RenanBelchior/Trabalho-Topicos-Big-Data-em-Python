@@ -57,15 +57,21 @@ if menu == "Árvore de Decisão":
         if colunas_selecionadas_dt:
             X = df[colunas_selecionadas_dt]
             y = df['Demanda']
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+            X_treino_completo, X_teste_final, y_treino_completo, y_teste_final = train_test_split(X, y, test_size=0.3, random_state=42)
+            X_treino_modelo, X_teste_modelo, y_treino_modelo, y_teste_modelo = train_test_split(X_treino_completo, y_treino_completo, test_size=0.3, random_state=42)
+
             model = DecisionTreeClassifier(random_state=42)
-            model.fit(X_train, y_train)
-            acc = accuracy_score(y_test, model.predict(X_test))
+            model.fit(X_treino_modelo, y_treino_modelo)
+            acc_teste_modelo = accuracy_score(y_teste_modelo, model.predict(X_teste_modelo))
             st.session_state.modelo_dt = model
-            st.session_state.historico_dt.append(acc)
-            if acc > st.session_state.melhor['acuracia']:
-                st.session_state.melhor = {'modelo': 'Árvore de Decisão', 'acuracia': acc}
-            st.success(f"Classificador Treinado com Sucesso. Acurácia: {acc*100:.2f}%")
+            st.session_state.historico_dt.append(acc_teste_modelo)
+
+            acc_teste_final = accuracy_score(y_teste_final, model.predict(X_teste_final))
+
+            if acc_teste_modelo > st.session_state.melhor['acuracia']:
+                st.session_state.melhor = {'modelo': 'Árvore de Decisão', 'acuracia': acc_teste_modelo}
+
+            st.success(f"Treino (30% do treino): {acc_teste_modelo*100:.2f}% | Teste final (30% dos dados): {acc_teste_final*100:.2f}%")
         else:
             st.warning("Selecione ao menos uma coluna de entrada.")
 
@@ -91,15 +97,21 @@ elif menu == "SVM":
         if colunas_selecionadas_svm:
             X = df[colunas_selecionadas_svm]
             y = df['Demanda']
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+            X_treino_completo, X_teste_final, y_treino_completo, y_teste_final = train_test_split(X, y, test_size=0.3, random_state=42)
+            X_treino_modelo, X_teste_modelo, y_treino_modelo, y_teste_modelo = train_test_split(X_treino_completo, y_treino_completo, test_size=0.3, random_state=42)
+
             pipeline = Pipeline([('scaler', StandardScaler()), ('svc', SVC(kernel='linear'))])
-            pipeline.fit(X_train, y_train)
-            acc = accuracy_score(y_test, pipeline.predict(X_test))
+            pipeline.fit(X_treino_modelo, y_treino_modelo)
+            acc_teste_modelo = accuracy_score(y_teste_modelo, pipeline.predict(X_teste_modelo))
             st.session_state.modelo_svm = pipeline
-            st.session_state.historico_svm.append(acc)
-            if acc > st.session_state.melhor['acuracia']:
-                st.session_state.melhor = {'modelo': 'SVM', 'acuracia': acc}
-            st.success(f"Classificador Treinado com Sucesso. Acurácia: {acc*100:.2f}%")
+            st.session_state.historico_svm.append(acc_teste_modelo)
+
+            acc_teste_final = accuracy_score(y_teste_final, pipeline.predict(X_teste_final))
+
+            if acc_teste_modelo > st.session_state.melhor['acuracia']:
+                st.session_state.melhor = {'modelo': 'SVM', 'acuracia': acc_teste_modelo}
+
+            st.success(f"Treino (30% do treino): {acc_teste_modelo*100:.2f}% | Teste final (30% dos dados): {acc_teste_final*100:.2f}%")
         else:
             st.warning("Selecione ao menos uma coluna de entrada.")
 
