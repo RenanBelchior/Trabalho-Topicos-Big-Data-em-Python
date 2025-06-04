@@ -13,17 +13,19 @@ st.title("Classificador Inteligente Master Peças")
 
 menu = st.sidebar.radio("Menu Principal", ["Árvore de Decisão", "SVM", "Comparativo", "Limpar Histórico"])
 
+# Função que carrega os dados e converte colunas categóricas em numéricas
 @st.cache_data
 def carregar_dados():
     df = pd.read_csv("https://raw.githubusercontent.com/RenanBelchior/Trabalho-Topicos-Big-Data-em-Python/main/historico_vendas.csv", encoding='utf-8-sig')
     le = LabelEncoder()
     for c in df.select_dtypes(include='object').columns:
-        df[c] = le.fit_transform(df[c])
+        df[c] = le.fit_transform(df[c])  # Conversão de texto para número
     return df
 
 df = carregar_dados()
 colunas_disponiveis = [col for col in df.columns if col != 'Demanda']
 
+# Inicializa estados globais para histórico, melhor modelo e resultados
 if 'historico_dt' not in st.session_state:
     st.session_state.historico_dt = []
 if 'historico_svm' not in st.session_state:
@@ -39,7 +41,7 @@ if 'teste_final_dt' not in st.session_state:
 if 'teste_final_svm' not in st.session_state:
     st.session_state.teste_final_svm = 0
 
-# Função para exibir histórico
+# Função para exibir histórico de desempenho
 def exibir_historico(lista):
     if lista:
         for i, acc in enumerate(reversed(lista), 1):
@@ -61,13 +63,17 @@ if menu == "Árvore de Decisão":
         if colunas_selecionadas_dt:
             X = df[colunas_selecionadas_dt]
             y = df['Demanda']
+
+            # Primeira divisão: 70% treino, 30% teste final
             X_treino_completo, X_teste_final, y_treino_completo, y_teste_final = train_test_split(X, y, test_size=0.3, random_state=42)
+
+            # Segunda divisão: dos 70%, usa 70% para treino e 30% para avaliação do modelo
             X_treino_modelo, X_teste_modelo, y_treino_modelo, y_teste_modelo = train_test_split(X_treino_completo, y_treino_completo, test_size=0.3, random_state=42)
 
             model = DecisionTreeClassifier(random_state=42)
             model.fit(X_treino_modelo, y_treino_modelo)
-            acc_teste_modelo = accuracy_score(y_teste_modelo, model.predict(X_teste_modelo))
-            acc_teste_final = accuracy_score(y_teste_final, model.predict(X_teste_final))
+            acc_teste_modelo = accuracy_score(y_teste_modelo, model.predict(X_teste_modelo))  # Desempenho do treino
+            acc_teste_final = accuracy_score(y_teste_final, model.predict(X_teste_final))  # Desempenho no teste real
 
             st.session_state.modelo_dt = model
             st.session_state.historico_dt.append(acc_teste_modelo)
@@ -102,6 +108,8 @@ elif menu == "SVM":
         if colunas_selecionadas_svm:
             X = df[colunas_selecionadas_svm]
             y = df['Demanda']
+
+            # Mesma lógica de divisão de dados que Árvore de Decisão
             X_treino_completo, X_teste_final, y_treino_completo, y_teste_final = train_test_split(X, y, test_size=0.3, random_state=42)
             X_treino_modelo, X_teste_modelo, y_treino_modelo, y_teste_modelo = train_test_split(X_treino_completo, y_treino_completo, test_size=0.3, random_state=42)
 
