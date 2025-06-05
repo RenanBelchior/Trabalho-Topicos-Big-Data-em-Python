@@ -13,23 +13,23 @@ st.title("Classificador Inteligente Master Peças")
 
 menu = st.sidebar.radio("Menu Principal", ["Árvore de Decisão", "SVM", "Comparativo", "Limpar Histórico"])
 
-# Função que carrega os dados e converte colunas categóricas em numéricas
+# Carregamento dos dados com cache
 @st.cache_data
 def carregar_dados():
     df = pd.read_csv("https://raw.githubusercontent.com/RenanBelchior/Trabalho-Topicos-Big-Data-em-Python/main/historico_vendas.csv", encoding='utf-8-sig')
     le = LabelEncoder()
     for c in df.select_dtypes(include='object').columns:
-        df[c] = le.fit_transform(df[c])  # Conversão de texto para número
+        df[c] = le.fit_transform(df[c])
     return df
 
 df = carregar_dados()
 colunas_disponiveis = [col for col in df.columns if col != 'Demanda']
 
-# Inicializa estados globais para histórico, melhor modelo e resultados
-if 'historico_dt' not in st.session_state:
-    st.session_state.historico_dt = []
-if 'historico_svm' not in st.session_state:
-    st.session_state.historico_svm = []
+# Inicializa session_state
+for chave in ['historico_dt', 'historico_svm']:
+    if chave not in st.session_state:
+        st.session_state[chave] = []
+
 if 'melhor' not in st.session_state:
     st.session_state.melhor = {'modelo': None, 'acuracia': 0}
 if 'modelo_dt' not in st.session_state:
@@ -41,11 +41,10 @@ if 'teste_final_dt' not in st.session_state:
 if 'teste_final_svm' not in st.session_state:
     st.session_state.teste_final_svm = 0
 
-# Função para exibir histórico de desempenho
 def exibir_historico(lista):
     if lista:
         for i, acc in enumerate(reversed(lista), 1):
-            st.write(f"Teste {len(lista)-i+1}: **{acc*100:.2f}%**")
+            st.write(f"Treino {len(lista)-i+1}: **{acc*100:.2f}%**")
     else:
         st.info("Nenhum histórico registrado.")
 
@@ -53,10 +52,7 @@ def exibir_historico(lista):
 if menu == "Árvore de Decisão":
     st.header("🌳 Árvore de Decisão - Menu")
 
-    if st.button("Mostrar Desempenho"):
-        exibir_historico(st.session_state.historico_dt)
-
-    st.subheader("Selecionar colunas de entrada para nova classificação")
+    st.subheader("Selecionar colunas de entrada")
     colunas_selecionadas_dt = st.multiselect("Selecione as colunas de entrada:", colunas_disponiveis, default=['Preco', 'Quantidade'])
 
     if st.button("Testar Nova Classificação"):
@@ -64,32 +60,34 @@ if menu == "Árvore de Decisão":
             X = df[colunas_selecionadas_dt]
             y = df['Demanda']
 
-            # Primeira divisão: 70% treino, 30% teste final
             X_treino_completo, X_teste_final, y_treino_completo, y_teste_final = train_test_split(X, y, test_size=0.3, random_state=42)
-
-            # Segunda divisão: dos 70%, usa 70% para treino e 30% para avaliação do modelo
             X_treino_modelo, X_teste_modelo, y_treino_modelo, y_teste_modelo = train_test_split(X_treino_completo, y_treino_completo, test_size=0.3, random_state=42)
 
             model = DecisionTreeClassifier(random_state=42)
             model.fit(X_treino_modelo, y_treino_modelo)
-            acc_teste_modelo = accuracy_score(y_teste_modelo, model.predict(X_teste_modelo))  # Desempenho do treino
-            acc_teste_final = accuracy_score(y_teste_final, model.predict(X_teste_final))  # Desempenho no teste real
+
+            acc_treino = accuracy_score(y_teste_modelo, model.predict(X_teste_modelo))
+            acc_final = accuracy_score(y_teste_final, model.predict(X_teste_final))
 
             st.session_state.modelo_dt = model
-            st.session_state.historico_dt.append(acc_teste_modelo)
-            st.session_state.teste_final_dt = acc_teste_final
+            st.session_state.historico_dt.append(acc_treino)
+            st.session_state.teste_final_dt = acc_final
 
-            if acc_teste_modelo > st.session_state.melhor['acuracia']:
-                st.session_state.melhor = {'modelo': 'Árvore de Decisão', 'acuracia': acc_teste_modelo}
+            if acc_treino > st.session_state.melhor['acuracia']:
+                st.session_state.melhor = {'modelo': 'Árvore de Decisão', 'acuracia': acc_treino}
 
-            st.success(f"Treino (30% do treino): {acc_teste_modelo*100:.2f}% | Teste final (70% dos dados): {acc_teste_final*100:.2f}%")
+            st.success(f"Teste final (70% dos dados): {acc_final*100:.2f}%")
         else:
-            st.warning("Selecione ao menos uma coluna de entrada.")
+            st.warning("Selecione ao menos uma coluna.")
+
+    if st.button("Mostrar Desempenho"):
+        st.subheader("Histórico de desempenho (Treino)")
+        exibir_historico(st.session_state.historico_dt)
 
     if st.button("Mostrar Árvore de Decisão"):
         if st.session_state.modelo_dt:
-            fig, ax = plt.subplots(figsize=(12,6))
-            plot_tree(st.session_state.modelo_dt, feature_names=colunas_selecionadas_dt, class_names=True, filled=True, ax=ax)
+            fig, ax = plt.subplots(figsize=(12, 6))
+            plot_tree(st.session_state.modelo_dt, feature_names=colunas_selecionadas_dt, filled=True, ax=ax)
             st.pyplot(fig)
         else:
             st.warning("Treine o modelo antes de visualizar a árvore.")
@@ -98,10 +96,7 @@ if menu == "Árvore de Decisão":
 elif menu == "SVM":
     st.header("🔎 SVM - Menu")
 
-    if st.button("Mostrar Desempenho"):
-        exibir_historico(st.session_state.historico_svm)
-
-    st.subheader("Selecionar colunas de entrada para nova classificação")
+    st.subheader("Selecionar colunas de entrada")
     colunas_selecionadas_svm = st.multiselect("Selecione as colunas de entrada:", colunas_disponiveis, default=['Preco', 'Quantidade'], key="svm")
 
     if st.button("Testar Nova Classificação", key="svm_treinar"):
@@ -109,33 +104,38 @@ elif menu == "SVM":
             X = df[colunas_selecionadas_svm]
             y = df['Demanda']
 
-            # Mesma lógica de divisão de dados que Árvore de Decisão
             X_treino_completo, X_teste_final, y_treino_completo, y_teste_final = train_test_split(X, y, test_size=0.3, random_state=42)
             X_treino_modelo, X_teste_modelo, y_treino_modelo, y_teste_modelo = train_test_split(X_treino_completo, y_treino_completo, test_size=0.3, random_state=42)
 
             pipeline = Pipeline([('scaler', StandardScaler()), ('svc', SVC(kernel='linear'))])
             pipeline.fit(X_treino_modelo, y_treino_modelo)
-            acc_teste_modelo = accuracy_score(y_teste_modelo, pipeline.predict(X_teste_modelo))
-            acc_teste_final = accuracy_score(y_teste_final, pipeline.predict(X_teste_final))
+
+            acc_treino = accuracy_score(y_teste_modelo, pipeline.predict(X_teste_modelo))
+            acc_final = accuracy_score(y_teste_final, pipeline.predict(X_teste_final))
 
             st.session_state.modelo_svm = pipeline
-            st.session_state.historico_svm.append(acc_teste_modelo)
-            st.session_state.teste_final_svm = acc_teste_final
+            st.session_state.historico_svm.append(acc_treino)
+            st.session_state.teste_final_svm = acc_final
 
-            if acc_teste_modelo > st.session_state.melhor['acuracia']:
-                st.session_state.melhor = {'modelo': 'SVM', 'acuracia': acc_teste_modelo}
+            if acc_treino > st.session_state.melhor['acuracia']:
+                st.session_state.melhor = {'modelo': 'SVM', 'acuracia': acc_treino}
 
-            st.success(f"Treino (30% do treino): {acc_teste_modelo*100:.2f}% | Teste final (70% dos dados): {acc_teste_final*100:.2f}%")
+            st.success(f"Teste final (70% dos dados): {acc_final*100:.2f}%")
         else:
-            st.warning("Selecione ao menos uma coluna de entrada.")
+            st.warning("Selecione ao menos uma coluna.")
+
+    if st.button("Mostrar Desempenho", key="svm_dsp"):
+        st.subheader("Histórico de desempenho (Treino)")
+        exibir_historico(st.session_state.historico_svm)
 
 # Comparativo
 elif menu == "Comparativo":
     st.header("📊 Comparativo de Desempenho - Teste Final")
-    acc_dt = st.session_state.teste_final_dt if 'teste_final_dt' in st.session_state else 0
-    acc_svm = st.session_state.teste_final_svm if 'teste_final_svm' in st.session_state else 0
+    acc_dt = st.session_state.teste_final_dt
+    acc_svm = st.session_state.teste_final_svm
     st.markdown(f"**Árvore de Decisão:** {acc_dt*100:.2f}%")
     st.markdown(f"**SVM:** {acc_svm*100:.2f}%")
+
     if acc_dt > acc_svm:
         st.success("🔍 Melhor desempenho no teste final: Árvore de Decisão")
     elif acc_svm > acc_dt:
@@ -143,7 +143,7 @@ elif menu == "Comparativo":
     else:
         st.info("🔍 Desempenho igual ou modelos não treinados.")
 
-# Limpar histórico
+# Limpar Histórico
 elif menu == "Limpar Histórico":
     st.session_state.historico_dt.clear()
     st.session_state.historico_svm.clear()
