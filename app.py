@@ -8,145 +8,104 @@ from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="Classificador Inteligente MasterPeças", layout="wide")
-st.title("Classificador Inteligente Master Peças")
-
-menu = st.sidebar.radio("Menu Principal", ["Árvore de Decisão", "SVM", "Comparativo", "Limpar Histórico"])
+st.set_page_config("Classificador MasterPeças", layout="wide")
+st.title("🔧 Classificador Inteligente Master Peças")
 
 @st.cache_data
 def carregar_dados():
     df = pd.read_csv("https://raw.githubusercontent.com/RenanBelchior/Trabalho-Topicos-Big-Data-em-Python/main/historico_vendas.csv", encoding='utf-8-sig')
-    le = LabelEncoder()
-    for c in df.select_dtypes(include='object').columns:
-        df[c] = le.fit_transform(df[c])
+    for col in df.select_dtypes('object'): df[col] = LabelEncoder().fit_transform(df[col])
     return df
 
 df = carregar_dados()
-colunas_disponiveis = [col for col in df.columns if col != 'Demanda']
+colunas = [c for c in df.columns if c != 'Demanda']
 
-# Inicializa variáveis de sessão
-for chave in ['historico_dt', 'historico_svm']:
-    if chave not in st.session_state:
-        st.session_state[chave] = []
+# Inicializa sessão
+for chave in ['historico_dt', 'historico_svm']: st.session_state.setdefault(chave, [])
+st.session_state.setdefault('melhor', {'modelo': None, 'acuracia': 0})
+st.session_state.setdefault('modelos', {'dt': None, 'svm': None})
+st.session_state.setdefault('testes_finais', {'dt': 0, 'svm': 0})
 
-if 'melhor' not in st.session_state:
-    st.session_state.melhor = {'modelo': None, 'acuracia': 0}
-if 'modelo_dt' not in st.session_state:
-    st.session_state.modelo_dt = None
-if 'modelo_svm' not in st.session_state:
-    st.session_state.modelo_svm = None
-if 'teste_final_dt' not in st.session_state:
-    st.session_state.teste_final_dt = 0
-if 'teste_final_svm' not in st.session_state:
-    st.session_state.teste_final_svm = 0
+# Função genérica de treino
+def treinar_modelo(X, y, modelo):
+    X_train_full, X_test_final, y_train_full, y_test_final = train_test_split(X, y, test_size=0.3, random_state=42)
+    X_train, X_val, y_train, y_val = train_test_split(X_train_full, y_train_full, test_size=0.3, random_state=42)
+    modelo.fit(X_train, y_train)
+    acc_train = accuracy_score(y_val, modelo.predict(X_val))
+    acc_final = accuracy_score(y_test_final, modelo.predict(X_test_final))
+    return modelo, acc_train, acc_final
 
-def exibir_historico(lista):
-    if lista:
-        for i, acc in enumerate(reversed(lista), 1):
-            st.write(f"Treino {len(lista)-i+1}: **{acc*100:.2f}%**")
+# Função para mostrar histórico
+def exibir_historico(hist):
+    if hist:
+        for i, acc in enumerate(reversed(hist), 1):
+            st.write(f"Treino {len(hist)-i+1}: **{acc*100:.2f}%**")
     else:
         st.info("Nenhum histórico registrado.")
 
-# Árvore de Decisão
-if menu == "Árvore de Decisão":
-    st.header("🌳 Árvore de Decisão - Menu")
+# Página de modelos
+def pagina_modelo(nome, chave, modelo_base, escalonar=False, mostrar_arvore=False):
+    st.header(f"{'🌳' if nome == 'Árvore de Decisão' else '🔎'} {nome} - Menu")
+    sel_cols = st.multiselect("Selecione as colunas de entrada:", colunas, default=['Preco', 'Quantidade'], key=chave)
 
-    st.subheader("Selecionar colunas de entrada")
-    colunas_selecionadas_dt = st.multiselect("Selecione as colunas de entrada:", colunas_disponiveis, default=['Preco', 'Quantidade'])
+    if st.button("Testar Nova Classificação", key=chave+'_treinar'):
+        if sel_cols:
+            X, y = df[sel_cols], df['Demanda']
+            modelo = Pipeline([('scaler', StandardScaler()), ('model', modelo_base)]) if escalonar else modelo_base
+            modelo, acc_train, acc_final = treinar_modelo(X, y, modelo)
 
-    if st.button("Testar Nova Classificação"):
-        if colunas_selecionadas_dt:
-            X = df[colunas_selecionadas_dt]
-            y = df['Demanda']
+            st.session_state['modelos'][chave] = modelo
+            st.session_state[f'historico_{chave}'].append(acc_train)
+            st.session_state['testes_finais'][chave] = acc_final
 
-            X_treino_completo, X_teste_final, y_treino_completo, y_teste_final = train_test_split(X, y, test_size=0.3, random_state=42)
-            X_treino_modelo, X_teste_modelo, y_treino_modelo, y_teste_modelo = train_test_split(X_treino_completo, y_treino_completo, test_size=0.3, random_state=42)
+            if acc_train > st.session_state['melhor']['acuracia']:
+                st.session_state['melhor'] = {'modelo': nome, 'acuracia': acc_train}
 
-            model = DecisionTreeClassifier(random_state=42)
-            model.fit(X_treino_modelo, y_treino_modelo)
-
-            acc_treino = accuracy_score(y_teste_modelo, model.predict(X_teste_modelo))
-            acc_final = accuracy_score(y_teste_final, model.predict(X_teste_final))
-
-            st.session_state.modelo_dt = model
-            st.session_state.historico_dt.append(acc_treino)
-            st.session_state.teste_final_dt = acc_final
-
-            if acc_treino > st.session_state.melhor['acuracia']:
-                st.session_state.melhor = {'modelo': 'Árvore de Decisão', 'acuracia': acc_treino}
-
-            st.success(f"Teste final (70% dos dados): {acc_final*100:.2f}%")
+            st.success(f"Teste final: {acc_final*100:.2f}%")
         else:
             st.warning("Selecione ao menos uma coluna.")
 
-    if st.button("Mostrar Desempenho"):
+    if st.button("Mostrar Desempenho", key=chave+'_desempenho'):
         st.subheader("Histórico de desempenho (Treino)")
-        exibir_historico(st.session_state.historico_dt)
+        exibir_historico(st.session_state[f'historico_{chave}'])
 
-    if st.button("Mostrar Árvore de Decisão"):
-        if st.session_state.modelo_dt:
+    if mostrar_arvore and st.button("Mostrar Árvore de Decisão"):
+        modelo = st.session_state['modelos'][chave]
+        if modelo:
             fig, ax = plt.subplots(figsize=(12, 6))
-            plot_tree(st.session_state.modelo_dt, feature_names=colunas_selecionadas_dt, filled=True, ax=ax)
+            plot_tree(modelo, feature_names=sel_cols, filled=True, ax=ax)
             st.pyplot(fig)
         else:
-            st.warning("Treine o modelo antes de visualizar a árvore.")
+            st.warning("Treine o modelo primeiro.")
 
-# SVM
-elif menu == "SVM":
-    st.header("🔎 SVM - Menu")
-
-    st.subheader("Selecionar colunas de entrada")
-    colunas_selecionadas_svm = st.multiselect("Selecione as colunas de entrada:", colunas_disponiveis, default=['Preco', 'Quantidade'], key="svm")
-
-    if st.button("Testar Nova Classificação", key="svm_treinar"):
-        if colunas_selecionadas_svm:
-            X = df[colunas_selecionadas_svm]
-            y = df['Demanda']
-
-            X_treino_completo, X_teste_final, y_treino_completo, y_teste_final = train_test_split(X, y, test_size=0.3, random_state=42)
-            X_treino_modelo, X_teste_modelo, y_treino_modelo, y_teste_modelo = train_test_split(X_treino_completo, y_treino_completo, test_size=0.3, random_state=42)
-
-            pipeline = Pipeline([('scaler', StandardScaler()), ('svc', SVC(kernel='linear'))])
-            pipeline.fit(X_treino_modelo, y_treino_modelo)
-
-            acc_treino = accuracy_score(y_teste_modelo, pipeline.predict(X_teste_modelo))
-            acc_final = accuracy_score(y_teste_final, pipeline.predict(X_teste_final))
-
-            st.session_state.modelo_svm = pipeline
-            st.session_state.historico_svm.append(acc_treino)
-            st.session_state.teste_final_svm = acc_final
-
-            if acc_treino > st.session_state.melhor['acuracia']:
-                st.session_state.melhor = {'modelo': 'SVM', 'acuracia': acc_treino}
-
-            st.success(f"Teste final (70% dos dados): {acc_final*100:.2f}%")
-        else:
-            st.warning("Selecione ao menos uma coluna.")
-
-    if st.button("Mostrar Desempenho", key="svm_dsp"):
-        st.subheader("Histórico de desempenho (Treino)")
-        exibir_historico(st.session_state.historico_svm)
-
-# Comparativo
-elif menu == "Comparativo":
+# Página Comparativo
+def pagina_comparativo():
     st.header("📊 Comparativo de Desempenho - Teste Final")
-    acc_dt = st.session_state.teste_final_dt
-    acc_svm = st.session_state.teste_final_svm
-    st.markdown(f"**Árvore de Decisão:** {acc_dt*100:.2f}%")
-    st.markdown(f"**SVM:** {acc_svm*100:.2f}%")
-
-    if acc_dt > acc_svm:
-        st.success("🔍 Melhor desempenho no teste final: Árvore de Decisão")
-    elif acc_svm > acc_dt:
-        st.success("🔍 Melhor desempenho no teste final: SVM")
+    dt, svm = st.session_state['testes_finais'].values()
+    st.markdown(f"**Árvore de Decisão:** {dt*100:.2f}%")
+    st.markdown(f"**SVM:** {svm*100:.2f}%")
+    if dt > svm:
+        st.success("🔍 Melhor: Árvore de Decisão")
+    elif svm > dt:
+        st.success("🔍 Melhor: SVM")
     else:
-        st.info("🔍 Desempenho igual ou modelos não treinados.")
+        st.info("🔍 Desempenho igual ou não treinado.")
 
-# Limpar Histórico
-elif menu == "Limpar Histórico":
-    st.session_state.historico_dt.clear()
-    st.session_state.historico_svm.clear()
-    st.session_state.melhor = {'modelo': None, 'acuracia': 0}
-    st.session_state.teste_final_dt = 0
-    st.session_state.teste_final_svm = 0
-    st.success("Histórico geral limpo com sucesso!")
+# Página Limpar
+def pagina_limpar():
+    for chave in ['historico_dt', 'historico_svm']:
+        st.session_state[chave].clear()
+    st.session_state['melhor'] = {'modelo': None, 'acuracia': 0}
+    st.session_state['testes_finais'] = {'dt': 0, 'svm': 0}
+    st.success("Histórico limpo com sucesso.")
+
+# Navegação
+pagina = st.sidebar.radio("Menu", ["Árvore de Decisão", "SVM", "Comparativo", "Limpar Histórico"])
+if pagina == "Árvore de Decisão":
+    pagina_modelo("Árvore de Decisão", "dt", DecisionTreeClassifier(random_state=42), mostrar_arvore=True)
+elif pagina == "SVM":
+    pagina_modelo("SVM", "svm", SVC(kernel='linear'), escalonar=True)
+elif pagina == "Comparativo":
+    pagina_comparativo()
+elif pagina == "Limpar Histórico":
+    pagina_limpar()
