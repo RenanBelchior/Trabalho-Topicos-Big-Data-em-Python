@@ -13,7 +13,6 @@ st.title("Classificador Inteligente Master Peças")
 
 menu = st.sidebar.radio("Menu Principal", ["Árvore de Decisão", "SVM", "Comparativo", "Limpar Histórico"])
 
-# Carregamento dos dados com cache
 @st.cache_data
 def carregar_dados():
     df = pd.read_csv("https://raw.githubusercontent.com/RenanBelchior/Trabalho-Topicos-Big-Data-em-Python/main/historico_vendas.csv", encoding='utf-8-sig')
@@ -25,7 +24,7 @@ def carregar_dados():
 df = carregar_dados()
 colunas_disponiveis = [col for col in df.columns if col != 'Demanda']
 
-# Inicializa session_state
+# Inicializa variáveis de sessão
 for chave in ['historico_dt', 'historico_svm']:
     if chave not in st.session_state:
         st.session_state[chave] = []
