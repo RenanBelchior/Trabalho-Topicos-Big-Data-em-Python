@@ -111,7 +111,7 @@ def pagina_modelo_svm():
             if acc_train > st.session_state['melhor']['acuracia']:
                 st.session_state['melhor'] = {'modelo': "SVM", 'acuracia': acc_train}
 
-            st.success(f"Teste final: {acc_final*100:.2f}%")
+            st.success(f"Teste: {acc_final*100:.2f}%")
         else:
             st.warning("Selecione ao menos uma coluna.")
 
