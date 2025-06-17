@@ -116,7 +116,7 @@ def pagina_modelo_svm():
             st.warning("Selecione ao menos uma coluna.")
 
     if st.button("Mostrar Desempenho", key='svm_desempenho'):
-        st.subheader("Histórico de desempenho (Treino)")
+        st.subheader("Histórico de desempenho")
         exibir_historico(st.session_state['historico_svm'])
 
 
