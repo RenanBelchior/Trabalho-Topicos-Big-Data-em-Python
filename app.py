@@ -85,7 +85,7 @@ def pagina_modelo_arvore():
     if st.button("Mostrar Árvore de Decisão"):
         modelo = st.session_state['modelos']['dt']
         if modelo:
-            fig, ax = plt.subplots(figsize=(12, 6))
+            fig, ax = plt.subplots(figsize=(20, 10))
             plot_tree(modelo, feature_names=sel_cols, filled=True, ax=ax)  # 🌳 Visualização da árvore
             st.pyplot(fig)
         else:
