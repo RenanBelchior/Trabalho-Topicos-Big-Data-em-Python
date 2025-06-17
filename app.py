@@ -79,7 +79,7 @@ def pagina_modelo_arvore():
             st.warning("Selecione ao menos uma coluna.")
 
     if st.button("Mostrar Desempenho", key='dt_desempenho'):
-        st.subheader("Histórico de desempenho (Treino)")
+        st.subheader("Histórico de desempenho")
         exibir_historico(st.session_state['historico_dt'])
 
     if st.button("Mostrar Árvore de Decisão"):
