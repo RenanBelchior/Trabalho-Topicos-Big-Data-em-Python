@@ -86,7 +86,7 @@ def pagina_modelo_arvore():
         modelo = st.session_state['modelos']['dt']
         if modelo:
             fig, ax = plt.subplots(figsize=(20, 10))
-            plot_tree(modelo, feature_names=sel_cols, filled=True, ax=ax, fontsize=5)  # 🌳 Visualização da árvore
+            plot_tree(modelo, feature_names=sel_cols, filled=True, ax=ax, fontsize=7)  # 🌳 Visualização da árvore
             st.pyplot(fig)
         else:
             st.warning("Treine o modelo primeiro.")
